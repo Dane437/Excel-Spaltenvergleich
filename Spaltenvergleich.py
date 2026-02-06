@@ -5,7 +5,7 @@ import string
 from pathlib import Path
 import pandas as pd
 
-#file paths
+#file paths  //test für git
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
 path_Netzleitzahlen = path_folder / "20260202_Netzleitzahlen.xlsm"
 path_GIS_Export = path_folder / "GIS-Export_Station_20260202.xlsx"
