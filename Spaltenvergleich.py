@@ -7,10 +7,10 @@ import pandas as pd
 
 #file paths
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
-path_Netzleitzahlen = path_folder / "20260202_Netzleitzahlen.xlsm"
+path_Netzleitzahlen = path_folder / "20260209_Netzleitzahlen.xlsm"
 path_K3_Export = path_folder / "K3V-Export_20260205.xlsx"
 
-#excel einlesen
+#Excel einlesen
 excel_Netzleitzahlen = pd.read_excel(path_Netzleitzahlen, sheet_name="Stationsliste")
 excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors='coerce')
 excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
