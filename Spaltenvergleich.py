@@ -13,8 +13,6 @@ path_K3_Export = path_folder / "K3V-Export_20260205.xlsx"
 #excel einlesen
 excel_Netzleitzahlen = pd.read_excel(path_Netzleitzahlen, sheet_name="Stationsliste")
 excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors='coerce')
-#excel_GIS_Export = pd.read_excel(path_GIS_Export, sheet_name="Station", header=4) #header=4: erste vier Zeilen werden ignoriert, Zeile 5 in Spaltenname
-#excel_GIS_Export['Stations ID'] = pd.to_numeric(excel_GIS_Export['Stations ID'], errors='coerce')
 excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
 excel_K3_Export[['Nummer NLZ', 'Nummer NKZ']] = (excel_K3_Export['Nummer'].str.extract(r'TS\s*(\d{3})\s*/\s*(.+)'))
 excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], errors='coerce')
@@ -24,22 +22,20 @@ merge_nlz: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_o
 merge_nlz['NLZ'] = pd.to_numeric(merge_nlz['NLZ'], errors='coerce')
 
 # Unterschiede finden
-difference_nkz = merge_nlz[merge_nlz['NKZ'].fillna('') != merge_nlz['Nummer NLZ'].fillna('')]
-only_nkz = difference_nkz[['NKZ', 'Kurzname']]
-difference_nlz = merge_nlz[merge_nlz['N'].fillna('') != merge_nlz['Stations ID'].fillna('')]
-# only_nlz = difference_nlz[['NLZ', 'Stations ID']]
-# difference_address = merge_nlz[merge_nlz['Stationsname'].fillna('') != merge_nlz['Name'].fillna('')]    #eine leere Zelle zählt als Unterschied
-# only_address = difference_address[['Stationsname', 'Name']]
-# difference_netz =  merge_nlz[merge_nlz['Netz'].notna() & merge_nlz['Teilnetz'].notna() & (merge_nlz['Netz'] != merge_nlz['Teilnetz'])]  #eine leere Zelle zählt nicht als Unterschied, da sie mit fillna('') behandelt wird
-# difference_netz['Netz'] = difference_netz['Netz'].str.replace('netz', '', regex=False)  # "netz" aus der Spalte "Netz" entfernen
-# only_netz = difference_netz[['Netz', 'Teilnetz', 'NKZ', 'Kurzname']]
+difference_nlz = merge_nlz[merge_nlz['NLZ'].fillna('') != merge_nlz['Nummer NLZ'].fillna('')]
+only_nlz = difference_nlz[['NLZ', 'Nummer NLZ']]
+difference_nkz = merge_nlz[merge_nlz['NKZ'].fillna('') != merge_nlz['Nummer NKZ'].fillna('').str.upper()]
+only_nkz = difference_nkz[['NKZ', 'Nummer NKZ']]
+difference_address = merge_nlz[merge_nlz['Stationsname'].fillna('') != merge_nlz['K3v ist'].fillna('')]    #eine leere Zelle zählt als Unterschied
+only_address = difference_address[['Stationsname', 'K3v ist']]
+difference_netz = merge_nlz[merge_nlz['Netz'].fillna('') != merge_nlz['Teilnetz'].fillna('')]    #eine leere Zelle zählt als Unterschied
+only_netz = difference_address[['Netz', 'Teilnetz']]
 
-# # Excel-Datei kreiren
-# #merge_NKZ.to_excel('Gesamt.xlsx', index=False)
-# with pd.ExcelWriter('Unterschiede.xlsx', engine='openpyxl') as writer:
-#     only_nlz.to_excel(writer, sheet_name='NLZ', index=False)
-#     only_nkz.to_excel(writer, sheet_name='NKZ', index=False)
-#     only_address.to_excel(writer, sheet_name='Adresse', index=False)
-#     only_netz.to_excel(writer, sheet_name='Netz', index=False)
-excel_K3_Export.to_excel('K3_Export.xlsx', index=False)
+# Excel-Datei kreiren
+#merge_nlz.to_excel('Gesamt.xlsx', index=False)
+with pd.ExcelWriter('Unterschiede_K3V_Netzleitzahlen.xlsx', engine='openpyxl') as writer:
+    only_nlz.to_excel(writer, sheet_name='NLZ', index=False)
+    only_nkz.to_excel(writer, sheet_name='NKZ', index=False)
+    only_address.to_excel(writer, sheet_name='Adresse', index=False)
+    only_netz.to_excel(writer, sheet_name='Netz', index=False)
 print("Datei wurde erfolgreich gespeichert!")
