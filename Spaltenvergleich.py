@@ -20,6 +20,7 @@ excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], err
 #Datensätze zusammenführen
 merge_nlz: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='NLZ', right_on='Nummer NLZ', how='outer')
 merge_nlz['NLZ'] = pd.to_numeric(merge_nlz['NLZ'], errors='coerce')
+merge_nlz["Netz"] = merge_nlz["Netz"] + "netz"
 
 # Unterschiede finden
 difference_nlz = merge_nlz[merge_nlz['NLZ'].fillna('') != merge_nlz['Nummer NLZ'].fillna('')]
@@ -29,7 +30,8 @@ only_nkz = difference_nkz[['NKZ', 'Nummer NKZ']]
 difference_address = merge_nlz[merge_nlz['Stationsname'].fillna('') != merge_nlz['K3v ist'].fillna('')]    #eine leere Zelle zählt als Unterschied
 only_address = difference_address[['Stationsname', 'K3v ist']]
 difference_netz = merge_nlz[merge_nlz['Netz'].fillna('') != merge_nlz['Teilnetz'].fillna('')]    #eine leere Zelle zählt als Unterschied
-only_netz = difference_address[['Netz', 'Teilnetz']]
+difference_netz['Netz'] = difference_netz['Netz'].str.replace('netz', '', regex=False)  # "netz" aus der Spalte "Netz" entfernen
+only_netz = difference_netz[['Netz', 'Teilnetz', 'NKZ', 'Nummer NKZ']]
 
 # Excel-Datei kreiren
 #merge_nlz.to_excel('Gesamt.xlsx', index=False)
