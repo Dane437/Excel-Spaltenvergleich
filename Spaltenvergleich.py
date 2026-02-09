@@ -8,15 +8,15 @@ import pandas as pd
 #file paths
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
 path_Netzleitzahlen = path_folder / "20260202_Netzleitzahlen.xlsm"
-path_GIS_Export = path_folder / "GIS-Export_Station_20260202.xlsx"
-#path_K3_Export = path_folder / "K3-Export_Vergleich k3v zu Netz.xlsx"
+#path_GIS_Export = path_folder / "GIS-Export_Station_20260202.xlsx"
+path_K3_Export = path_folder / "K3-Export_Vergleich k3v zu Netz.xlsx"
 
 #excel einlesen
 excel_Netzleitzahlen = pd.read_excel(path_Netzleitzahlen, sheet_name="Stationsliste")
 excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors='coerce')
-excel_GIS_Export = pd.read_excel(path_GIS_Export, sheet_name="Station", header=4) #header=4: erste vier Zeilen werden ignoriert, Zeile 5 in Spaltenname
-excel_GIS_Export['Stations ID'] = pd.to_numeric(excel_GIS_Export['Stations ID'], errors='coerce')
-#excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
+#excel_GIS_Export = pd.read_excel(path_GIS_Export, sheet_name="Station", header=4) #header=4: erste vier Zeilen werden ignoriert, Zeile 5 in Spaltenname
+#excel_GIS_Export['Stations ID'] = pd.to_numeric(excel_GIS_Export['Stations ID'], errors='coerce')
+excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
 
 #Datensätze zusammenführen
 merge_nlz: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_GIS_Export, left_on='NLZ', right_on='Stations ID', how='outer')
