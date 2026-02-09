@@ -19,7 +19,7 @@ excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors=
 excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
 
 #Datensätze zusammenführen
-merge_nlz: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_GIS_Export, left_on='NLZ', right_on='Stations ID', how='outer')
+merge_nlz: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='NLZ', right_on='Stations ID', how='outer')
 merge_nlz["Netz"] = merge_nlz["Netz"] + "netz"
 #merge_nlz['NLZ'] = pd.to_numeric(merge_nlz['NLZ'], errors='coerce')
 #merge_nlz['Stations ID'] = pd.to_numeric(merge_nlz['Stations ID'], errors='coerce')
