@@ -20,7 +20,7 @@ excel_GIS_Export['Stations ID'] = pd.to_numeric(excel_GIS_Export['Stations ID'],
 
 #Datensätze zusammenführen
 merge_nlz: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_GIS_Export, left_on='NLZ', right_on='Stations ID', how='outer')
-#merge_nlz["Netz"] = merge_nlz["Netz"] + "netz"
+merge_nlz["Netz"] = merge_nlz["Netz"] + "netz"
 #merge_nlz['NLZ'] = pd.to_numeric(merge_nlz['NLZ'], errors='coerce')
 #merge_nlz['Stations ID'] = pd.to_numeric(merge_nlz['Stations ID'], errors='coerce')
 
@@ -29,14 +29,17 @@ difference_nkz = merge_nlz[merge_nlz['NKZ'].fillna('') != merge_nlz['Kurzname'].
 only_nkz = difference_nkz[['NKZ', 'Kurzname']]
 difference_nlz = merge_nlz[merge_nlz['NLZ'].fillna('') != merge_nlz['Stations ID'].fillna('')]
 only_nlz = difference_nlz[['NLZ', 'Stations ID']]
-difference_address = merge_nlz[merge_nlz['Stationsname'].fillna('') != merge_nlz['Name'].fillna('')]
+difference_address = merge_nlz[merge_nlz['Stationsname'].fillna('') != merge_nlz['Name'].fillna('')]    #eine leere Zelle zählt als Unterschied
 only_address = difference_address[['Stationsname', 'Name']]
-difference_netz = merge_nlz
+difference_netz =  merge_nlz[merge_nlz['Netz'].notna() & merge_nlz['Teilnetz'].notna() & (merge_nlz['Netz'] != merge_nlz['Teilnetz'])]  #eine leere Zelle zählt nicht als Unterschied, da sie mit fillna('') behandelt wird
+difference_netz['Netz'] = difference_netz['Netz'].str.replace('netz', '', regex=False)  # "netz" aus der Spalte "Netz" entfernen
+only_netz = difference_netz[['Netz', 'Teilnetz', 'NKZ', 'Kurzname']]
 
 # Excel-Datei kreiren
 #merge_NKZ.to_excel('Gesamt.xlsx', index=False)
-with pd.ExcelWriter('Unterschiede5.xlsx', engine='openpyxl') as writer:
+with pd.ExcelWriter('Unterschiede.xlsx', engine='openpyxl') as writer:
     only_nlz.to_excel(writer, sheet_name='NLZ', index=False)
     only_nkz.to_excel(writer, sheet_name='NKZ', index=False)
     only_address.to_excel(writer, sheet_name='Adresse', index=False)
+    only_netz.to_excel(writer, sheet_name='Netz', index=False)
 print("Datei wurde erfolgreich gespeichert!")
