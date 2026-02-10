@@ -5,6 +5,8 @@ import string
 from pathlib import Path
 import pandas as pd
 
+#Datenvergleich zwischen Netzleitzahlen.xlsm und GIS-Export_Station.xlsx
+
 #file paths
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
 path_Netzleitzahlen = path_folder / "20260209_Netzleitzahlen.xlsm"
