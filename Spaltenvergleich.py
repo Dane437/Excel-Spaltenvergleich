@@ -5,9 +5,11 @@ import string
 from pathlib import Path
 import pandas as pd
 
+#Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
+
 #file paths
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
-path_Netzleitzahlen = path_folder / "20260209_Netzleitzahlen.xlsm"
+path_Netzleitzahlen = path_folder / "20260210_Netzleitzahlen.xlsm"
 path_K3_Export = path_folder / "K3V-Export_20260205.xlsx"
 
 #Excel einlesen
