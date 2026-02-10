@@ -9,7 +9,7 @@ import pandas as pd
 
 #file paths
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
-path_Netzleitzahlen = path_folder / "20260209_Netzleitzahlen.xlsm"
+path_Netzleitzahlen = path_folder / "20260210_Netzleitzahlen.xlsm"
 path_GIS_Export = path_folder / "GIS-Export_Station_20260209.xlsx"
 
 #Excel einlesen
