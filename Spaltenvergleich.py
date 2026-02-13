@@ -2,7 +2,9 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image
 import string
+import io
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -17,7 +19,14 @@ path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx"
 
 #Excel einlesen
 excel_Netzleitzahlen = pd.read_excel(path_Netzleitzahlen, sheet_name="Stationsliste")
+excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors='coerce')
 excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
+excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
+#excel_K3_Export[['Nummer NLZ', 'Nummer NKZ']] = (excel_K3_Export['Nummer'].str.extract(r'TS\s*(\d{3})\s*/\s*(.+)'))
+#excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], errors='coerce')
+nb_columns_excel_K3_Export = excel_K3_Export.shape[1]
+nb_columns_excel_Netzleitzahlen = excel_Netzleitzahlen.shape[1]
+nb_columns = nb_columns_excel_K3_Export + nb_columns_excel_Netzleitzahlen
 
 #Datensätze zusammenführen
 merge_adress: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='Stationsname', right_on='K3v', how='outer')
@@ -29,18 +38,30 @@ copy_merge_adress["Inbetriebnahme"] = copy_merge_adress["Inbetriebnahme"].dt.yea
 netzstationen = copy_merge_adress[copy_merge_adress["Stationstyp"] == "Netzstation"]
 anzahl_pro_jahr = netzstationen.groupby("Inbetriebnahme").size()
 
-
 # Unterschiede finden
 #only_adress_IBS = merge_adress[['Stationsname', 'K3v', 'Inbetriebnahme']]
 
+# Diagramm erzeugen
+plt.figure(figsize=(15, 7))
+anzahl_pro_jahr.plot(kind="bar")
+plt.title("Netzstationen pro Jahr")
+plt.xlabel("Jahr")
+plt.ylabel("Anzahl")
+plt.xticks(rotation=90)
+#plt.tight_layout()
+#plt.show()
+
+img_data = io.BytesIO()
+plt.savefig(img_data, format='png')
+plt.close() # Schließt die Figure, um Speicher zu sparen
 
 # Excel-Datei kreiren
 #only_adress_IBS.to_excel('Temp.xlsx', index=False)
 with pd.ExcelWriter('merge_adress.xlsx', engine='openpyxl') as writer:
-    merge_adress.to_excel(writer, sheet_name='Tabelle 1', index=False, startrow=1)
+    merge_adress.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
         # Zugriff auf das Workbook und Worksheet
     workbook = writer.book
-    worksheet = writer.sheets['Tabelle 1']
+    worksheet = writer.sheets['Vergleich']
 
     # Dicke Linie definieren
     thick_border = Side(style='thick')
@@ -49,12 +70,11 @@ with pd.ExcelWriter('merge_adress.xlsx', engine='openpyxl') as writer:
     max_row = worksheet.max_row
 
     # Formatierung Überschrift
+    worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=nb_columns_excel_Netzleitzahlen)
+    worksheet.merge_cells(start_row=1, start_column=nb_columns_excel_Netzleitzahlen+1, end_row=1, end_column=nb_columns)
 
-    worksheet.merge_cells('A1:F1')
-    worksheet.merge_cells('G1:K1')
-
-    cell_left = worksheet['A1']
-    cell_right = worksheet['G1']
+    cell_left = worksheet.cell(row=1, column=1)  # A1
+    cell_right = worksheet.cell(row=1, column=nb_columns_excel_Netzleitzahlen+1)  # G1
 
     cell_left.value = "Netzleitzahlen"
     cell_right.value = "K3V"
@@ -77,19 +97,15 @@ with pd.ExcelWriter('merge_adress.xlsx', engine='openpyxl') as writer:
     grey_fill = PatternFill(fill_type="solid", start_color="E7E6E6")
     bold_font = Font(bold=True)
 
-    for col in range(1, 12):  # A-K = 1-11
+    for col in range(1, nb_columns + 1):  # A-K = 1-11
         cell = worksheet.cell(row=2, column=col)
         cell.fill = grey_fill
         cell.font = bold_font
 
     # Rechte Seite von Spalte F (Spalte 6) dick machen
     for row in range(1, max_row + 1):
-        cell = worksheet.cell(row=row, column=6)  # Spalte F
+        cell = worksheet.cell(row=row, column=nb_columns_excel_Netzleitzahlen)  # Spalte F
         cell.border = Border(right=thick_border)
-    
-    for column in range(1,12):
-        cell = worksheet.cell(row=1, column=column)
-        cell.border = Border(bottom=thick_border)
 
     # Automatisch Spaltenbreite
     for column in worksheet.columns:
@@ -108,14 +124,15 @@ with pd.ExcelWriter('merge_adress.xlsx', engine='openpyxl') as writer:
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
 
+    # Zweites Sheet: Der Plot
+    # Wir erstellen manuell ein leeres Sheet
+    workbook = writer.book
+    worksheet = workbook.create_sheet('Diagramm')
+    
+    # Das Bild aus dem Speicher laden und in das Sheet einfügen
+    img_data.seek(0) # Cursor an den Anfang des Speichers setzen
+    img = Image(img_data)
+    worksheet.add_image(img, 'A1')
+
 print("Datei wurde erfolgreich gespeichert!")
 
-# Diagramm erzeugen
-#plt.figure(figsize=(14, 8))
-#anzahl_pro_jahr.plot(kind="bar")
-#plt.title("Netzstationen pro Jahr")
-#plt.xlabel("Jahr")
-#plt.ylabel("Anzahl")
-#plt.xticks(rotation=90)
-#plt.tight_layout()
-#plt.show()
