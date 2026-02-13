@@ -8,6 +8,7 @@ import string
 import io
 from pathlib import Path
 import matplotlib.pyplot as plt
+from utils import highlight_differences
 
 #Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
 
@@ -155,32 +156,8 @@ with pd.ExcelWriter('Auswertung.xlsx', engine='openpyxl') as writer:
     img = Image(img_data)
     worksheet.add_image(img, 'A1')
 
-
-wb = load_workbook('Auswertung.xlsx')
-ws = wb['Vergleich']
-
-red_fill = PatternFill(
-    start_color='FFCCCC',
-    end_color='FFCCCC',
-    fill_type='solid'
-)
-
-header_row = 2
-headers = {cell.value: cell.column for cell in ws[header_row]}
-
-col_station = headers['Stationsname']
-col_k3v = headers['K3v']
-
-for row in range(header_row + 1, ws.max_row + 1):
-    c1 = ws.cell(row=row, column=col_station)
-    c2 = ws.cell(row=row, column=col_k3v)
-
-    if c1.value != c2.value:
-        c1.fill = red_fill
-        c2.fill = red_fill
-
-
-# 3️⃣ SPEICHERN (Pflicht!)
-wb.save('Auswertung.xlsx')
+highlight_differences('Auswertung.xlsx', 'Vergleich', 'Stationsname', K3V_name_column[0], header_row=2)
+highlight_differences('Auswertung.xlsx', 'Vergleich', 'NKZ', 'Nummer NKZ', header_row=2)
+highlight_differences('Auswertung.xlsx', 'Vergleich', 'NLZ', 'Nummer NLZ', header_row=2)
 print("Datei wurde erfolgreich gespeichert!")
 
