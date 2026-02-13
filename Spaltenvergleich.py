@@ -3,6 +3,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
+from openpyxl.formatting.rule import FormulaRule
 import string
 import io
 from pathlib import Path
@@ -10,33 +11,51 @@ import matplotlib.pyplot as plt
 
 #Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
 
-#file paths
-
-path_folder_Netzleitzahlen = Path(r"B:\# N-Gemeinsam\Trafostationsliste")
-path_Netzleitzahlen = path_folder_Netzleitzahlen /  "Netzleitzahlen_Makro.xlsm"
+#### !!! Check if correct: !!!
 path_folder_K3_Export = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
 path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx"
+K3V_name_column = ["K3v", "Nummer", "Betriebsstatus", "Inbetriebnahme"] #K3V_name_column[0], K3V_name_column[1], ...
+
+#file paths
+path_folder_Netzleitzahlen = Path(r"B:\# N-Gemeinsam\Trafostationsliste")
+path_Netzleitzahlen = path_folder_Netzleitzahlen /  "Netzleitzahlen_Makro.xlsm"
 
 #Excel einlesen
 excel_Netzleitzahlen = pd.read_excel(path_Netzleitzahlen, sheet_name="Stationsliste")
 excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors='coerce')
 excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
-excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
-#excel_K3_Export[['Nummer NLZ', 'Nummer NKZ']] = (excel_K3_Export['Nummer'].str.extract(r'TS\s*(\d{3})\s*/\s*(.+)'))
-#excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], errors='coerce')
+# Die Zeilen filtern: Behalte alles, wo " (Liegenschaft)" NICHT vorkommt
+excel_K3_Export = excel_K3_Export[~excel_K3_Export[K3V_name_column[0]].astype(str).str.contains(r'\(Liegenschaft\)', na=False)] # na=False -> leere Zellen ignorieren
+excel_K3_Export[['Nummer NLZ', 'Nummer NKZ']] = (excel_K3_Export[K3V_name_column[1]].str.extract(r'.*?(\d{3})\s*/\s*(.+)'))
+excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], errors='coerce')
 nb_columns_excel_K3_Export = excel_K3_Export.shape[1]
 nb_columns_excel_Netzleitzahlen = excel_Netzleitzahlen.shape[1]
 nb_columns = nb_columns_excel_K3_Export + nb_columns_excel_Netzleitzahlen
 
 #Datensätze zusammenführen
-merge_adress: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='Stationsname', right_on='K3v', how='outer')
+#hier nächste Woche weitermachen, dass das auch passt dann
+merge_adress: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='Stationsname', right_on=K3V_name_column[0], how='outer', indicator=True)
+not_matched = merge_adress[merge_adress['_merge']=='left_only'].drop(columns=excel_K3_Export.columns)
+fallback = pd.merge(not_matched, excel_K3_Export, left_on="NLZ", right_on='Nummer NLZ', how='left')
+matched = merge_adress[merge_adress['_merge'] == 'both'].drop(columns=['_merge'])
+merge_final = pd.concat([matched, fallback], ignore_index=True)
 
-copy_merge_adress = merge_adress.copy()
-copy_merge_adress["Inbetriebnahme"] = pd.to_datetime(copy_merge_adress["Inbetriebnahme"], dayfirst=True, errors='coerce') 
-copy_merge_adress["Inbetriebnahme"] = copy_merge_adress["Inbetriebnahme"].dt.year.astype('Int64')
+merge_adress.to_excel('merge_adress.xlsx', index=False)
+not_matched.to_excel('not_matched.xlsx', index=False)
+fallback.to_excel('fallback.xlsx', index=False)
+matched.to_excel('matched.xlsx', index=False)
+merge_final.to_excel('merge_final.xlsx', index=False)
 
-netzstationen = copy_merge_adress[copy_merge_adress["Stationstyp"] == "Netzstation"]
-anzahl_pro_jahr = netzstationen.groupby("Inbetriebnahme").size()
+
+#merge_name: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='NLZ', right_on='Nummer NLZ', how='outer')
+#merge_final = merge_adress.combine_first(merge_name)
+
+copy_merge_final = merge_final.copy()
+copy_merge_final[K3V_name_column[3]] = pd.to_datetime(copy_merge_final[K3V_name_column[3]], dayfirst=True, errors='coerce') 
+copy_merge_final[K3V_name_column[3]] = copy_merge_final[K3V_name_column[3]].dt.year.astype('Int64')
+
+netzstationen = copy_merge_final[copy_merge_final["Stationstyp"].str.contains("Netz", na=False)]
+anzahl_pro_jahr = netzstationen.groupby(K3V_name_column[3]).size()
 
 # Unterschiede finden
 #only_adress_IBS = merge_adress[['Stationsname', 'K3v', 'Inbetriebnahme']]
@@ -56,9 +75,9 @@ plt.savefig(img_data, format='png')
 plt.close() # Schließt die Figure, um Speicher zu sparen
 
 # Excel-Datei kreiren
-#only_adress_IBS.to_excel('Temp.xlsx', index=False)
-with pd.ExcelWriter('merge_adress.xlsx', engine='openpyxl') as writer:
-    merge_adress.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
+#merge_name.to_excel('Temp.xlsx', index=False)
+with pd.ExcelWriter('Auswertung.xlsx', engine='openpyxl') as writer:
+    merge_final.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
         # Zugriff auf das Workbook und Worksheet
     workbook = writer.book
     worksheet = writer.sheets['Vergleich']
@@ -124,6 +143,8 @@ with pd.ExcelWriter('merge_adress.xlsx', engine='openpyxl') as writer:
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
 
+
+
     # Zweites Sheet: Der Plot
     # Wir erstellen manuell ein leeres Sheet
     workbook = writer.book
@@ -134,5 +155,32 @@ with pd.ExcelWriter('merge_adress.xlsx', engine='openpyxl') as writer:
     img = Image(img_data)
     worksheet.add_image(img, 'A1')
 
+
+wb = load_workbook('Auswertung.xlsx')
+ws = wb['Vergleich']
+
+red_fill = PatternFill(
+    start_color='FFCCCC',
+    end_color='FFCCCC',
+    fill_type='solid'
+)
+
+header_row = 2
+headers = {cell.value: cell.column for cell in ws[header_row]}
+
+col_station = headers['Stationsname']
+col_k3v = headers['K3v']
+
+for row in range(header_row + 1, ws.max_row + 1):
+    c1 = ws.cell(row=row, column=col_station)
+    c2 = ws.cell(row=row, column=col_k3v)
+
+    if c1.value != c2.value:
+        c1.fill = red_fill
+        c2.fill = red_fill
+
+
+# 3️⃣ SPEICHERN (Pflicht!)
+wb.save('Auswertung.xlsx')
 print("Datei wurde erfolgreich gespeichert!")
 
