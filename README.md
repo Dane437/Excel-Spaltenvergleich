@@ -1,8 +1,10 @@
 **Kurzzusammenfassung**
+
 Dieses Script führt ein Datenvergleich zwischen der Excel Datei Netzleitzahlen_Makro und der Excel Datei K3v-Export durch.
 Das Script generiert eine neue Excel Datei in der die Daten schön übersichtlich angezeigt werden. Dabei werden die Daten intelligent geordent, Unterschiede frablich hervorgehoben, sowie Statistiken erstellt.
 
 **Script starten**
+
 Um das Script zu starten muss wie folgt vorgenangen werden:
 In dem Terminal in Visual Studio Code muss folgender Befehl ausgeführt werden:
 ```bash
