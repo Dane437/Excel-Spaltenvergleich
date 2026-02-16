@@ -6,7 +6,18 @@ Das Script generiert eine neue Excel Datei in der die Daten schön übersichtlic
 **Script starten**
 
 Um das Script zu starten muss wie folgt vorgenangen werden:
-In dem Terminal in Visual Studio Code muss folgender Befehl ausgeführt werden:
+Nachdem man Visual Studio Code gestartet hat muss der Code des Projekts von GitHub heruntergeladen werden.
+Dazu gibt man in dem Terminal von Visual Studio Code folgenden Befehl ein:
+```bash
+git clone https://github.com/Dane437/Excel-Spaltenvergleich/tree/main
+```
+Durch den folgenden Befehl wird eine virtuelle Umgebung erstellt.
+```bash
+python -m venv .venv
+.\.venv\Scripts\activate
+```
+Die Nutzung ist optional, aber empfehlenswert, wenn auf dem System bereits andere Projekte oder Bibliotheken installiert sind. So lassen sich Konflikte vermeiden und Abhängigkeiten sauber voneinander trennen.
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -20,3 +31,9 @@ path_folder_K3_Export = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV
 path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx"
 K3V_name_column = ["K3v", "Nummer", "Betriebsstatus", "Inbetriebnahme"]
 ```
+
+Jetzt kannst du das Script starten, entweder im Terminal mit:
+```bash
+python Spaltenvergleich.py
+```
+Alternativ kann es auch über den folgenden Button gestartet werden:
