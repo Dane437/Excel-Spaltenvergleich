@@ -15,8 +15,8 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
         c2 = ws.cell(row=row, column=headers[col_right])
 
         if c1.value != c2.value:
-            c1.fill = PatternFill(start_color='FFCCCC', fill_type='solid')
-            c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')
+            c1.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
+            c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
 
     wb.save(file_name)
 
