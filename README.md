@@ -37,3 +37,6 @@ Jetzt kannst du das Script starten, entweder im Terminal mit:
 python Spaltenvergleich.py
 ```
 Alternativ kann es auch über den folgenden Button gestartet werden:
+
+<img width="380" height="287" alt="image" src="https://github.com/user-attachments/assets/7aa26e5d-a9a1-4942-8079-c92491364a5d" />
+
