@@ -8,24 +8,15 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
     wb = load_workbook(file_name)
     ws = wb[sheet_name]
 
-    red_fill = PatternFill(
-        start_color='FFCCCC',
-        end_color='FFCCCC',
-        fill_type='solid'
-    )
-
     headers = {cell.value: cell.column for cell in ws[header_row]}
 
-    col_station = headers[col_left]
-    col_k3v = headers[col_right]
-
     for row in range(header_row + 1, ws.max_row + 1):
-        c1 = ws.cell(row=row, column=col_station)
-        c2 = ws.cell(row=row, column=col_k3v)
+        c1 = ws.cell(row=row, column=headers[col_left])
+        c2 = ws.cell(row=row, column=headers[col_right])
 
         if c1.value != c2.value:
-            c1.fill = red_fill
-            c2.fill = red_fill
+            c1.fill = PatternFill(start_color='FFCCCC', fill_type='solid')
+            c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')
 
     wb.save(file_name)
 
