@@ -4,11 +4,10 @@ from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
 from openpyxl.formatting.rule import FormulaRule
-import string
 import io
 from pathlib import Path
 import matplotlib.pyplot as plt
-from utils import highlight_differences
+from utils import highlight_differences, de_sort_key
 
 #Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
 
@@ -34,25 +33,29 @@ nb_columns_excel_Netzleitzahlen = excel_Netzleitzahlen.shape[1]
 nb_columns = nb_columns_excel_K3_Export + nb_columns_excel_Netzleitzahlen
 
 #Datensätze zusammenführen
-#hier nächste Woche weitermachen, dass das auch passt dann
 merge_adress: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='Stationsname', right_on=K3V_name_column[0], how='outer', indicator=True)
-not_matched = merge_adress[merge_adress['_merge']=='left_only'].drop(columns=excel_K3_Export.columns)
-fallback = pd.merge(not_matched, excel_K3_Export, left_on="NLZ", right_on='Nummer NLZ', how='left')
+not_matched_l = merge_adress[merge_adress['_merge']=='left_only'].drop(columns=excel_K3_Export.columns)
+not_matched_r = merge_adress[merge_adress['_merge']=='right_only'].drop(columns=excel_Netzleitzahlen.columns)
+merge_not_matched = pd.merge(not_matched_l, not_matched_r, left_on="NLZ", right_on='Nummer NLZ', how='outer', indicator=False)
 matched = merge_adress[merge_adress['_merge'] == 'both'].drop(columns=['_merge'])
-merge_final = pd.concat([matched, fallback], ignore_index=True)
+final_data = pd.concat([matched, merge_not_matched], ignore_index=True)
+
+# Sortieren nach Stationsname, wenn nicht vorhanden nach K3v 
+final_data["_sort_key"] = (final_data["Stationsname"].fillna(final_data[K3V_name_column[0]]).astype(str).str.strip().apply(de_sort_key))
+final_data = (final_data.sort_values(by="_sort_key").drop(columns="_sort_key").reset_index(drop=True))
+
+#final_data = final_data.sort_values(by=["Stationsname", K3V_name_column[0]], ascending=[True, True]);
+final_data = final_data.loc[:, ~final_data.columns.str.contains("_merge")]  #alle _merge Spalten löschen
 
 merge_adress.to_excel('merge_adress.xlsx', index=False)
-not_matched.to_excel('not_matched.xlsx', index=False)
-fallback.to_excel('fallback.xlsx', index=False)
+not_matched_l.to_excel('not_matched_l.xlsx', index=False)
+not_matched_r.to_excel('not_matched_r.xlsx', index=False)
+merge_not_matched.to_excel('fallback.xlsx', index=False)
 matched.to_excel('matched.xlsx', index=False)
-merge_final.to_excel('merge_final.xlsx', index=False)
+final_data.to_excel('merge_final.xlsx', index=False)
 
-
-#merge_name: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='NLZ', right_on='Nummer NLZ', how='outer')
-#merge_final = merge_adress.combine_first(merge_name)
-
-copy_merge_final = merge_final.copy()
-copy_merge_final[K3V_name_column[3]] = pd.to_datetime(copy_merge_final[K3V_name_column[3]], dayfirst=True, errors='coerce') 
+copy_merge_final = final_data.copy()
+copy_merge_final[K3V_name_column[3]] = pd.to_datetime(copy_merge_final[K3V_name_column[3]], dayfirst=True, errors='coerce')
 copy_merge_final[K3V_name_column[3]] = copy_merge_final[K3V_name_column[3]].dt.year.astype('Int64')
 
 netzstationen = copy_merge_final[copy_merge_final["Stationstyp"].str.contains("Netz", na=False)]
@@ -78,8 +81,8 @@ plt.close() # Schließt die Figure, um Speicher zu sparen
 # Excel-Datei kreiren
 #merge_name.to_excel('Temp.xlsx', index=False)
 with pd.ExcelWriter('Auswertung.xlsx', engine='openpyxl') as writer:
-    merge_final.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
-        # Zugriff auf das Workbook und Worksheet
+    final_data.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
+    # Zugriff auf das Workbook und Worksheet
     workbook = writer.book
     worksheet = writer.sheets['Vergleich']
 
@@ -143,8 +146,6 @@ with pd.ExcelWriter('Auswertung.xlsx', engine='openpyxl') as writer:
         if adjusted_width > 30 :
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
-
-
 
     # Zweites Sheet: Der Plot
     # Wir erstellen manuell ein leeres Sheet

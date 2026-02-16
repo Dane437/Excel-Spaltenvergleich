@@ -1,7 +1,9 @@
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import FormulaRule
+import unicodedata
 
+# Vergleicht die Werte in den angegebenen Spalten und hebt die Unterschiede hervor
 def highlight_differences(file_name, sheet_name, col_left, col_right, header_row=2):
     wb = load_workbook(file_name)
     ws = wb[sheet_name]
@@ -26,3 +28,13 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
             c2.fill = red_fill
 
     wb.save(file_name)
+
+
+# Hilfsfunktion zum Sortieren von Strings mit deutschen Umlauten
+def de_sort_key(s):
+    return (
+        unicodedata.normalize("NFKD", s)
+        .encode("ascii", "ignore")
+        .decode("ascii")
+        .lower()
+    )
