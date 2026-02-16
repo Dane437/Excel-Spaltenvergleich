@@ -11,7 +11,7 @@ from utils import highlight_differences, de_sort_key
 
 #Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
 
-#### !!! Check if correct: !!!
+# !!! Check if correct: !!!
 path_folder_K3_Export = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")
 path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx"
 K3V_name_column = ["K3v", "Nummer", "Betriebsstatus", "Inbetriebnahme"] #K3V_name_column[0], K3V_name_column[1], ...

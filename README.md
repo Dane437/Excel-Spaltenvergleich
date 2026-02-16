@@ -32,11 +32,12 @@ path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx"
 K3V_name_column = ["K3v", "Nummer", "Betriebsstatus", "Inbetriebnahme"]
 ```
 
-Jetzt kannst du das Script starten, entweder im Terminal mit:
+Jetzt kann das Script gestartet werden. Entweder über das Terminal mit dem Befehl,
 ```bash
 python Spaltenvergleich.py
 ```
-Alternativ kann es auch über den folgenden Button gestartet werden:
+oder alternativ über den folgenden Button:
 
 <img width="380" height="287" alt="image" src="https://github.com/user-attachments/assets/7aa26e5d-a9a1-4942-8079-c92491364a5d" />
 
+Wenn im Terminal steht: "Datei wurde erfolgreich gespeichert!" hat alles funktioniert und die Datei "Auswertung.xlsx" wurde erstellt.
