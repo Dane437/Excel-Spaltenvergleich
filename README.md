@@ -9,7 +9,7 @@ Um das Script zu starten muss wie folgt vorgenangen werden:
 Nachdem man Visual Studio Code gestartet hat muss der Code des Projekts von GitHub heruntergeladen werden.
 Dazu gibt man in dem Terminal von Visual Studio Code folgenden Befehl ein:
 ```bash
-git clone https://github.com/Dane437/Excel-Spaltenvergleich/tree/main
+git clone https://github.com/Dane437/Excel-Spaltenvergleich/tree/K3V
 ```
 Durch den folgenden Befehl wird eine virtuelle Umgebung erstellt.
 ```bash
