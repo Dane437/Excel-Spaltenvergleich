@@ -4,7 +4,7 @@ from openpyxl.formatting.rule import FormulaRule
 import unicodedata
 
 # Vergleicht die Werte in den angegebenen Spalten und hebt die Unterschiede hervor
-def highlight_differences(file_name, sheet_name, col_left, col_right, header_row=2):
+def highlight_differences(file_name, sheet_name, col_left, col_right, header_row, valid_combinations):
     wb = load_workbook(file_name)
     ws = wb[sheet_name]
 
@@ -14,7 +14,14 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
         c1 = ws.cell(row=row, column=headers[col_left])
         c2 = ws.cell(row=row, column=headers[col_right])
 
-        if c1.value != c2.value:
+        if not valid_combinations:
+            if c1.value != c2.value:
+                c1.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
+                c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
+        else:
+            if (c1.value, c2.value) in valid_combinations:
+                continue
+
             c1.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
             c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
 

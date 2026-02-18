@@ -55,7 +55,7 @@ data_netzstationen_per_year = only_netzstationen.groupby('Baujahr').size()
 # Diagramm erzeugen
 plt.figure(figsize=(15, 7))
 data_netzstationen_per_year.plot(kind="bar")
-plt.title("Netzstationen pro Jahr")
+plt.title("Errichtete Gebäude pro Jahr")
 plt.xlabel("Jahr")
 plt.ylabel("Anzahl")
 plt.xticks(rotation=90)
@@ -129,9 +129,23 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     worksheet.add_image(img, 'A1')
 
 # Unterschiede zwischen den Spalten grafisch hervorheben
-highlight_differences(file_name, 'Vergleich', 'Stationsname', 'Name', header_row=2)
-highlight_differences(file_name, 'Vergleich', 'NKZ', 'Kurzname', header_row=2)
-highlight_differences(file_name, 'Vergleich', 'NLZ', 'Stations ID', header_row=2)
-highlight_differences(file_name, 'Vergleich', 'Netz', 'Teilnetz', header_row=2)
+highlight_differences(file_name, 'Vergleich', 'Stationsname', 'Name', header_row=2, valid_combinations=None)
+highlight_differences(file_name, 'Vergleich', 'NKZ', 'Kurzname', header_row=2, valid_combinations=None)
+highlight_differences(file_name, 'Vergleich', 'NLZ', 'Stations ID', header_row=2, valid_combinations=None)
+highlight_differences(file_name, 'Vergleich', 'Netz', 'Teilnetz', header_row=2, valid_combinations=None)
+valid_combinations = {
+    ('Umspannwerk', 'Umspannwerk'),
+    ('Schalthaus', 'Schalthaus'),
+    ('Netzstation', 'Netztrafostation'),
+    ('6-KV-Sonderkunde mit eigenen Ring', 'Sonderkundenstation'),
+    ('20-KV-Sonderkundenstation', 'Sonderkundenstation'),
+    ('20-KV-Sonderkundenstation mit zwei Kunden', 'Sonderkundenstation'),
+    ('20-KV-Sonderkunde mit eigenen Ring', 'Sonderkundenschalthaus'),
+    ('kombinierte Netz- und 20-KV-Sonderkundenstation', 'Kombinierte Station'),
+    ('kombinierte Netz- und 20-KV-Sonderkunde mit eigenen Ring', 'Kombinierte Station'),
+    ('Wasserkraftanlage im Fremdnetz', 'Wasserkraftanlage im Fremdnetz'),
+    ('Baustromstation', 'Baustrom')}
+highlight_differences(file_name, 'Vergleich', 'Stationstyp', 'Funktion', header_row=2, valid_combinations=valid_combinations)
+
 print("Datei wurde erfolgreich gespeichert!")
 
