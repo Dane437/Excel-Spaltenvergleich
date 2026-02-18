@@ -69,7 +69,8 @@ plt.savefig(img_data, format='png')
 plt.close() # Schließt die Figure, um Speicher zu sparen
 
 # Excel-Datei kreiren
-with pd.ExcelWriter('Auswertung.xlsx', engine='openpyxl') as writer:
+file_name = 'Unterschiede_K3V_Netzleitzahlen.xlsx'
+with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     final_data.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
 
     # Zugriff auf das Workbook und Worksheet
@@ -130,8 +131,8 @@ with pd.ExcelWriter('Auswertung.xlsx', engine='openpyxl') as writer:
     worksheet.add_image(img, 'A1')
 
 # Unterschiede zwischen den Spalten grafisch hervorheben
-highlight_differences('Auswertung.xlsx', 'Vergleich', 'Stationsname', K3V_name_column[0], header_row=2)
-highlight_differences('Auswertung.xlsx', 'Vergleich', 'NKZ', 'Nummer NKZ', header_row=2)
-highlight_differences('Auswertung.xlsx', 'Vergleich', 'NLZ', 'Nummer NLZ', header_row=2)
+highlight_differences(file_name, 'Vergleich', 'Stationsname', K3V_name_column[0], header_row=2, valid_combinations=None)
+highlight_differences(file_name, 'Vergleich', 'NKZ', 'Nummer NKZ', header_row=2, valid_combinations=None)
+highlight_differences(file_name, 'Vergleich', 'NLZ', 'Nummer NLZ', header_row=2, valid_combinations=None)
 print("Datei wurde erfolgreich gespeichert!")
 
