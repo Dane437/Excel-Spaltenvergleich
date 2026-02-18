@@ -11,9 +11,9 @@ from utils import highlight_differences, de_sort_key
 
 # Datenvergleich zwischen Netzleitzahlen.xlsm und GIS-Export.xlsx
 
+# Pfad zur GIS-Exportdatei
 # !!! Überpüfen: !!!
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")  # Dateipfad überprüfen
-path_Netzleitzahlen = path_folder / "20260210_Netzleitzahlen.xlsm"  # Dateiname überprüfen
 path_GIS_Export = path_folder / "GIS-Export_Station_20260209.xlsx"  # Spaltennamen überpüfen
 
 # Pfad zu der Netzleitzahlendatei
