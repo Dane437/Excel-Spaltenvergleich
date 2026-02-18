@@ -67,7 +67,7 @@ plt.savefig(img_data, format='png')
 plt.close() # Schließt das Diagramm um Speicher zu sparen
 
 # Excel-Datei kreiren
-file_name = 'Auswertung_GIS.xlsx'
+file_name = 'Unterschiede_GIS_Netzleitzahlen_GIS.xlsx'
 with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     final_data.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
 
