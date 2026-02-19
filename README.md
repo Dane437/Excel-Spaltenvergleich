@@ -5,8 +5,8 @@ Das Script generiert eine neue Excel Datei in der die Daten schön übersichtlic
 
 **Script starten**
 
-Um das Script zu starten muss wie folgt vorgenangen werden:
-Nachdem man Visual Studio Code gestartet hat muss der Code des Projekts von GitHub heruntergeladen werden.
+Um das Script zu starten muss wie folgt vorgegangen werden:
+Nachdem man Visual Studio Code gestartet hat, muss der Code des Projekts von GitHub heruntergeladen werden.
 Dazu gibt man in dem Terminal von Visual Studio Code folgenden Befehl ein:
 ```bash
 git clone https://github.com/Dane437/Excel-Spaltenvergleich/tree/K3V
