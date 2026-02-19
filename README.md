@@ -29,7 +29,7 @@ Anschließend muss im Script Spaltenvergleich.py überprüft werden, ob der Date
 # Pfad zur GIS-Exportdatei
 # !!! Überpüfen: !!!
 path_folder = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")  # Dateipfad überprüfen
-path_GIS_Export = path_folder / "GIS-Export_Station_20260209.xlsx"  # Spaltennamen überpüfen
+path_GIS_Export = path_folder / "GIS-Export_Station_20260209.xlsx"  # Dateinamen überpüfen
 ```
 
 Jetzt kann das Script gestartet werden. Entweder über das Terminal mit dem Befehl,
