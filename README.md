@@ -40,4 +40,4 @@ oder alternativ über den folgenden Button:
 
 <img width="380" height="287" alt="image" src="https://github.com/user-attachments/assets/7aa26e5d-a9a1-4942-8079-c92491364a5d" />
 
-Wenn im Terminal steht: "Datei wurde erfolgreich gespeichert!" hat alles funktioniert und die Datei "Auswertung_GIS.xlsx" wurde erstellt.
+Wenn im Terminal steht: "Datei wurde erfolgreich gespeichert!" hat alles funktioniert und die Datei "Unterschiede_GIS_Netzleitzahlen.xlsx" wurde erstellt.
