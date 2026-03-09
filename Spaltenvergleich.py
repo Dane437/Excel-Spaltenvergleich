@@ -12,78 +12,53 @@ from utils import highlight_differences, de_sort_key
 # Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
 
 # !!! Überpüfen: !!!
-path_folder_K3_Export = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")    #Dateipfad überprüfen
-path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx" # Dateiname überprüfen
-K3V_name_column = ["K3v", "Nummer", "Betriebsstatus", "Inbetriebnahme"] # Spaltennamen überpüfen
+path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp")    #Dateipfad überprüfen
+file_1_name = 'Trafoliste_K3V.xlsx'
+file_1_sheet_name = 'Tabelle1'
+file_1_sorting_column = 'Nummer NKZ'
+file_1_needed_columns = ['Nummer NKZ', 'Anlage', 'SN [kVA]', 'Betriebsstatus (Anlage)']
 
-# Pfad zu der Netzleitzahlendatei
-path_Netzleitzahlen = Path(r"B:\# N-Gemeinsam\Trafostationsliste\Netzleitzahlen_Makro.xlsm")
+file_2_name = "Transformator_GIS.xlsx"
+file_2_sheet_name = 'Transformator (MSP)'
+file_2_sorting_column = 'Kurzname'
+file_2_needed_columns = ['Kurzname', 'Name Station', 'Leistung (kVA)', 'Status']
+
+compare_columns = [('SN [kVA]', 'Leistung (kVA)')]
+                   #, ('Betriebsstatus (Anlage)', 'Status')]
+
 
 # Excel einlesen
-excel_Netzleitzahlen = pd.read_excel(path_Netzleitzahlen, sheet_name="Stationsliste")
-excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors='coerce')
-excel_K3_Export = pd.read_excel(path_K3_Export, sheet_name="Tabelle1")
+excel_file_1 = pd.read_excel(path_folder / file_1_name, sheet_name=file_1_sheet_name)
+excel_file_1[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_1['Nummer'].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
+excel_file_1 = excel_file_1[file_1_needed_columns]  # auskommentieren, wenn alle Spalten angezeigt werden sollen
+excel_file_2 = pd.read_excel(path_folder / file_2_name, sheet_name=file_2_sheet_name)
+excel_file_2 = excel_file_2[file_2_needed_columns] # auskommentieren, wenn alle Spalten angezeigt werden sollen
 
-# Daten aufbereiten
-excel_K3_Export = excel_K3_Export[~excel_K3_Export[K3V_name_column[0]].astype(str).str.contains(r'\(Liegenschaft\)', na=False)] # Zeilen löschen in denen "Liegenschaft" vorkommt
-excel_K3_Export[['Nummer NLZ', 'Nummer NKZ']] = (excel_K3_Export[K3V_name_column[1]].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
-excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], errors='coerce') # NLZ zu Zahl konvertieren
 
 # Anzahl Spalten bestimmen
-nb_columns_excel_K3_Export = excel_K3_Export.shape[1]
-nb_columns_excel_Netzleitzahlen = excel_Netzleitzahlen.shape[1]
-nb_columns = nb_columns_excel_K3_Export + nb_columns_excel_Netzleitzahlen
+nb_columns_excel_file_1 = excel_file_1.shape[1]
+nb_columns_excel_file_2 = excel_file_2.shape[1]
+nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 
 # Datensätze zusammenführen
-merge_adress: pd.DataFrame = pd.merge(excel_Netzleitzahlen, excel_K3_Export, left_on='Stationsname', right_on=K3V_name_column[0], how='outer', indicator=True)
-not_matched_l = merge_adress[merge_adress['_merge']=='left_only'].drop(columns=excel_K3_Export.columns)
-not_matched_r = merge_adress[merge_adress['_merge']=='right_only'].drop(columns=excel_Netzleitzahlen.columns)
-merge_not_matched = pd.merge(not_matched_l, not_matched_r, left_on="NLZ", right_on='Nummer NLZ', how='outer', indicator=False)
-matched = merge_adress[merge_adress['_merge'] == 'both'].drop(columns=['_merge'])
-final_data = pd.concat([matched, merge_not_matched], ignore_index=True)
-
-# Sortieren nach Stationsname, wenn nicht vorhanden nach K3v 
-final_data["_sort_key"] = (final_data["Stationsname"].fillna(final_data[K3V_name_column[0]]).astype(str).str.strip().apply(de_sort_key))
-final_data = (final_data.sort_values(by="_sort_key").drop(columns="_sort_key").reset_index(drop=True))
-final_data = final_data.loc[:, ~final_data.columns.str.contains("_merge")]  # alle _merge Spalten löschen
-
-# Daten für Netzstationen Statistik extrahieren
-copy_merge_final = final_data.copy()
-copy_merge_final[K3V_name_column[3]] = pd.to_datetime(copy_merge_final[K3V_name_column[3]], dayfirst=True, errors='coerce')
-copy_merge_final[K3V_name_column[3]] = copy_merge_final[K3V_name_column[3]].dt.year.astype('Int64')
-only_netzstationen = copy_merge_final[copy_merge_final["Stationstyp"].str.contains("Netz", na=False)]
-data_netzstationen_per_year = only_netzstationen.groupby(K3V_name_column[3]).size()
-
-# Diagramm erzeugen
-plt.figure(figsize=(15, 7))
-data_netzstationen_per_year.plot(kind="bar")
-plt.title("Netzstationen pro Jahr")
-plt.xlabel("Jahr")
-plt.ylabel("Anzahl")
-plt.xticks(rotation=90)
-#plt.show()
-
-# Diagramm speichern
-img_data = io.BytesIO()
-plt.savefig(img_data, format='png')
-plt.close() # Schließt die Figure, um Speicher zu sparen
+merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_sorting_column, right_on= file_2_sorting_column, how='outer', indicator=False)
 
 # Excel-Datei kreiren
-file_name = 'Unterschiede_K3V_Netzleitzahlen.xlsx'
+file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
 with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
-    final_data.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
+    merged_files.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
 
     # Zugriff auf das Workbook und Worksheet
     workbook = writer.book
     worksheet = writer.sheets['Vergleich']
 
     # Überschrift erstellen und formatieren
-    worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=nb_columns_excel_Netzleitzahlen)
-    worksheet.merge_cells(start_row=1, start_column=nb_columns_excel_Netzleitzahlen+1, end_row=1, end_column=nb_columns)
+    worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=nb_columns_excel_file_1)
+    worksheet.merge_cells(start_row=1, start_column=nb_columns_excel_file_1+1, end_row=1, end_column=nb_columns)
     cell_left = worksheet.cell(row=1, column=1)
-    cell_right = worksheet.cell(row=1, column=nb_columns_excel_Netzleitzahlen+1)
-    cell_left.value = "Netzleitzahlen"
-    cell_right.value = "K3V"
+    cell_right = worksheet.cell(row=1, column=nb_columns_excel_file_1+1)
+    cell_left.value = file_1_name.split('.')[0]
+    cell_right.value = file_2_name.split('.')[0]
     center_align = Alignment(horizontal="center", vertical="center")
 
     cell_left.fill = PatternFill(start_color="C6EFCE", fill_type="solid")   # grüne Formatierung
@@ -102,7 +77,7 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     # Trennungslinie erzeugen
     max_row = worksheet.max_row
     for row in range(1, max_row + 1):
-        cell = worksheet.cell(row=row, column=nb_columns_excel_Netzleitzahlen)
+        cell = worksheet.cell(row=row, column=nb_columns_excel_file_2)
         cell.border = Border(right=Side(style='thick'))
 
     # Automatisch Spaltenbreite
@@ -122,17 +97,9 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
 
-    # Zweites Sheet für Diagramm
-    worksheet = workbook.create_sheet('Diagramm')
-    
-    # Das Bild aus dem Speicher laden und in das Sheet einfügen
-    img_data.seek(0)
-    img = Image(img_data)
-    worksheet.add_image(img, 'A1')
-
 # Unterschiede zwischen den Spalten grafisch hervorheben
-highlight_differences(file_name, 'Vergleich', 'Stationsname', K3V_name_column[0], header_row=2, valid_combinations=None)
-highlight_differences(file_name, 'Vergleich', 'NKZ', 'Nummer NKZ', header_row=2, valid_combinations=None)
-highlight_differences(file_name, 'Vergleich', 'NLZ', 'Nummer NLZ', header_row=2, valid_combinations=None)
+for column_1, column_2 in compare_columns:
+    highlight_differences(file_name, 'Vergleich', column_1, column_2, header_row=2, valid_combinations=None, empty_is_difference=False)
+
 print("Datei wurde erfolgreich gespeichert!")
 
