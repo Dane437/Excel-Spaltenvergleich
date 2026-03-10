@@ -40,6 +40,7 @@ nb_columns_excel_file_1 = excel_file_1.shape[1]
 nb_columns_excel_file_2 = excel_file_2.shape[1]
 nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 
+# Hilfsindex, damit wenn in beiden Tabellen 2 Zeilen mit dem gleichen Sortierschlüssel existieren, keine vier Zeilen entstehen
 excel_file_1['idx'] = excel_file_1.groupby('Nummer NKZ').cumcount()
 excel_file_2['idx'] = excel_file_2.groupby('Kurzname').cumcount() 
 
