@@ -40,8 +40,12 @@ nb_columns_excel_file_1 = excel_file_1.shape[1]
 nb_columns_excel_file_2 = excel_file_2.shape[1]
 nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 
+excel_file_1['idx'] = excel_file_1.groupby('Nummer NKZ').cumcount()
+excel_file_2['idx'] = excel_file_2.groupby('Kurzname').cumcount() 
+
 # Datensätze zusammenführen
-merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_sorting_column, right_on= file_2_sorting_column, how='outer', indicator=False)
+merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= [file_1_sorting_column, 'idx'], right_on= [file_2_sorting_column, 'idx'], how='outer', indicator=False)
+merged_files = merged_files.drop(columns='idx') 
 
 # Excel-Datei kreiren
 file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
