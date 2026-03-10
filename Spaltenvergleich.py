@@ -13,8 +13,8 @@ from utils import highlight_differences, de_sort_key
 
 # !!! Überpüfen: !!!
 path_folder_K3_Export = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")    #Dateipfad überprüfen
-path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx" # Dateiname überprüfen
-K3V_name_column = ["K3v", "Nummer", "Betriebsstatus", "Inbetriebnahme"] # Spaltennamen überpüfen
+path_K3_Export = path_folder_K3_Export / "Trafoliste_K3V.xlsx" # Dateiname überprüfen
+K3V_name_column = ["Anlage", "Nummer", "Betriebsstatus (Anlage)", "Inbetriebnahme (Anlage)", "ZONE", "Produktgruppe"] # Spaltennamen überpüfen
 
 # Pfad zu der Netzleitzahlendatei
 path_Netzleitzahlen = Path(r"B:\# N-Gemeinsam\Trafostationsliste\Netzleitzahlen_Makro.xlsm")
