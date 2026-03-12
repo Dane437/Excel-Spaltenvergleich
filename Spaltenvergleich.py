@@ -9,7 +9,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from utils import highlight_differences, de_sort_key
 
-# Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
+# Datenvergleich zwischen zwei Excel-Dateien, hier Trafoliste K3V und Trafoliste aus dem GIS
 
 # !!! Überpüfen: !!!
 path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp")    #Dateipfad überprüfen
@@ -82,7 +82,7 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     # Trennungslinie erzeugen
     max_row = worksheet.max_row
     for row in range(1, max_row + 1):
-        cell = worksheet.cell(row=row, column=nb_columns_excel_file_2)
+        cell = worksheet.cell(row=row, column=nb_columns_excel_file_1)
         cell.border = Border(right=Side(style='thick'))
 
     # Automatisch Spaltenbreite
