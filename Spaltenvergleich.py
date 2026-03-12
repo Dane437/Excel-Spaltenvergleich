@@ -9,7 +9,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from utils import highlight_differences, de_sort_key
 
-# Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
+# Ordnung von Zeilen zweier beliebiger Excel-Dateien
 
 # !!! Überpüfen: !!!
 path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp")    #Dateipfad überprüfen
