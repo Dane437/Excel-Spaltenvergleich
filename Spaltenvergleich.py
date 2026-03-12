@@ -13,40 +13,37 @@ from utils import highlight_differences, de_sort_key
 
 # !!! Überpüfen: !!!
 path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp")    #Dateipfad überprüfen
-file_1_name = 'Trafoliste_K3V.xlsx'
-file_1_sheet_name = 'Tabelle1'
-file_1_sorting_column = 'Nummer NKZ'
-file_1_needed_columns = ['Nummer NKZ', 'Anlage', 'SN [kVA]', 'Betriebsstatus (Anlage)']
+file_1_name = 'TS Messungen_20260311'
+file_1_sheet_name = 'Übersicht'
+file_1_merging_column = 'TS'
+file_1_header = 3
+file_1_needed_columns = ['TS']
 
-file_2_name = "Transformator_GIS.xlsx"
-file_2_sheet_name = 'Transformator (MSP)'
-file_2_sorting_column = 'Kurzname'
-file_2_needed_columns = ['Kurzname', 'Name Station', 'Leistung (kVA)', 'Status']
-
-compare_columns = [('SN [kVA]', 'Leistung (kVA)')]
-                   #, ('Betriebsstatus (Anlage)', 'Status')]
-
+file_2_name = '2025-04-04_Stationen_Messwerte'
+file_2_sheet_name = 'Tabelle1'
+file_2_merging_column = 'Anlage'
+file_2_header = 1
+file_2_needed_columns = ['Anlage', 'Abschlussdatum', 'Leistung[kW]', 'Leistung[kVA]']
 
 # Excel einlesen
-excel_file_1 = pd.read_excel(path_folder / file_1_name, sheet_name=file_1_sheet_name)
-excel_file_1[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_1['Nummer'].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
-excel_file_1 = excel_file_1[file_1_needed_columns]  # auskommentieren, wenn alle Spalten angezeigt werden sollen
-excel_file_2 = pd.read_excel(path_folder / file_2_name, sheet_name=file_2_sheet_name)
-excel_file_2 = excel_file_2[file_2_needed_columns] # auskommentieren, wenn alle Spalten angezeigt werden sollen
+excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
+excel_file_1 = excel_file_1[file_1_needed_columns]
+excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
+excel_file_2 = excel_file_2[file_2_needed_columns]
 
+# Daten individuel bearbeiten
+excel_file_2['Abschlussdatum'] = pd.to_datetime(excel_file_2['Abschlussdatum'], dayfirst=True)
+excel_file_2 = excel_file_2[excel_file_2['Abschlussdatum'].dt.year == 2024]
+excel_file_2['Leistung[kVA]'] = excel_file_2['Leistung[kVA]'].round(2)
 
 # Anzahl Spalten bestimmen
 nb_columns_excel_file_1 = excel_file_1.shape[1]
 nb_columns_excel_file_2 = excel_file_2.shape[1]
 nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 
-# Hilfsindex, damit wenn in beiden Tabellen 2 Zeilen mit dem gleichen Sortierschlüssel existieren, keine vier Zeilen entstehen
-excel_file_1['idx'] = excel_file_1.groupby('Nummer NKZ').cumcount()
-excel_file_2['idx'] = excel_file_2.groupby('Kurzname').cumcount() 
-
 # Datensätze zusammenführen
-merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= [file_1_sorting_column, 'idx'], right_on= [file_2_sorting_column, 'idx'], how='outer', indicator=False)
-merged_files = merged_files.drop(columns='idx') 
+merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_merging_column, right_on= file_2_merging_column, how='left', indicator=False)
+#merged_files.to_excel('Gesamt.xlsx', index=False)
 
 # Excel-Datei kreiren
 file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
@@ -82,7 +79,7 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     # Trennungslinie erzeugen
     max_row = worksheet.max_row
     for row in range(1, max_row + 1):
-        cell = worksheet.cell(row=row, column=nb_columns_excel_file_2)
+        cell = worksheet.cell(row=row, column=nb_columns_excel_file_1)
         cell.border = Border(right=Side(style='thick'))
 
     # Automatisch Spaltenbreite
@@ -101,10 +98,6 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
         if adjusted_width > 30 :    # Maximalbreite setzen
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
-
-# Unterschiede zwischen den Spalten grafisch hervorheben
-for column_1, column_2 in compare_columns:
-    highlight_differences(file_name, 'Vergleich', column_1, column_2, header_row=2, valid_combinations=None, empty_is_difference=False)
 
 print("Datei wurde erfolgreich gespeichert!")
 
