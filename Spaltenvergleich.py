@@ -47,7 +47,8 @@ merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_
 
 # Excel-Datei kreiren
 file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
-with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
+file_path = path_folder / file_name
+with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
     merged_files.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
 
     # Zugriff auf das Workbook und Worksheet
