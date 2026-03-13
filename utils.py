@@ -13,18 +13,14 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
     for row in range(header_row + 1, ws.max_row + 1):
         c1 = ws.cell(row=row, column=headers[col_left])
         c2 = ws.cell(row=row, column=headers[col_right])
-
-        if not valid_combinations:
-            if c1.value != c2.value:
+        
+        if c1.value != c2.value:
+            if (c1.value, c2.value) in valid_combinations:
+                    continue
+            else:
                 c1.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
                 c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
                 rows_different.append(row)
-        else:
-            if (c1.value, c2.value) in valid_combinations:
-                continue
-
-            c1.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
-            c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
 
     wb.save(file_name)
     return rows_different
@@ -50,6 +46,8 @@ def create_differences_sheet(file_name, compare_column, rows_different, header_r
         if row not in rows_different:
              worksheet_copy.delete_rows(row)
         else:
+            if compare_column == ('leer', 'leer'):
+                 continue
             worksheet_copy.cell(row=row, column=headers[compare_column[0]]).fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
             worksheet_copy.cell(row=row, column=headers[compare_column[1]]).fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
 

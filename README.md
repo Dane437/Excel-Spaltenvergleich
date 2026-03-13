@@ -26,11 +26,20 @@ Dadruch werden die nötigen Bibliotheken für das Script installiert.
 Anschließend muss im Script Spaltenvergleich.py überprüft werden, ob der Dateipfad, der Dateiname sowie die Spaltennamen mit der K3-Export Datei
 übereinstimmen:
 ```bash
-# Pfad zu der K3V-Export-Datei
-# !!! Überpüfen !!!
-path_folder_K3_Export = Path(r"\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\20-kV-Stationen")    #Dateipfad überprüfen
-path_K3_Export = path_folder_K3_Export / "K3V-Export_20260213.xlsx" # Dateiname überprüfen
-K3V_name_column = ["K3v", "Nummer", "Betriebsstatus", "Inbetriebnahme"] # Spaltennamen überpüfen
+# !!! Überpüfen: !!!
+path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp')    #Dateipfad eingeben
+file_K3V_name = 'Netzstationen_K3V' # Dateiname eingeben
+file_K3V_header = 2 # Headergröße überprüfen (2 = Spaltenüberschriften sind in Zeile 3)
+column_name_K3V = ['Name', 'Nummer', 'Betriebsstatus', 'Inbetriebnahme', 'Teilnetz'] # Spaltennamen eingeben (Spalten nach dem letzen gebrauchten Element können weggelassen werden)
+compare_columns = [('Stationsname', column_name_K3V[0]),    # zu vergleichende Spalten eingeben
+                    ('NKZ', 'Nummer NKZ'),
+                    ('NLZ', 'Nummer NLZ'),
+                    ('Netz', 'Teilnetz')]
+valid_combinations = [('Nord', 'Nordnetz'), # gültige Kombinationen eingeben 
+                      ('Ost', 'Ostnetz'),
+                      ('Süd', 'Südnetz'),
+                      ('West', 'Westnetz'),
+                      ('Südost', 'Südostnetz')]
 ```
 
 Jetzt kann das Script gestartet werden. Entweder über das Terminal mit dem Befehl,

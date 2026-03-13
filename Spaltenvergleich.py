@@ -12,13 +12,19 @@ from utils import highlight_differences, de_sort_key, create_differences_sheet
 # Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
 
 # !!! Überpüfen: !!!
-path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp')    #Dateipfad überprüfen
-file_K3V_name = 'Netzstationen_K3V' # Dateiname überprüfen
-file_K3V_header = 2
-column_name_K3V = ['Name', 'Nummer', 'Betriebsstatus', 'Inbetriebnahme', 'Teilnetz'] # Spaltennamen überpüfen
-compare_columns = [('Stationsname', column_name_K3V[0]),
+path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp')    #Dateipfad eingeben
+file_K3V_name = 'Netzstationen_K3V' # Dateiname eingeben
+file_K3V_header = 2 # Headergröße überprüfen (2 = Spaltenüberschriften sind in Zeile 3)
+column_name_K3V = ['Name', 'Nummer', 'Betriebsstatus', 'Inbetriebnahme', 'Teilnetz'] # Spaltennamen eingeben (Spalten nach dem letzen gebrauchten Element können weggelassen werden)
+compare_columns = [('Stationsname', column_name_K3V[0]),    # zu vergleichende Spalten eingeben
                     ('NKZ', 'Nummer NKZ'),
-                    ('NLZ', 'Nummer NLZ')]
+                    ('NLZ', 'Nummer NLZ'),
+                    ('Netz', 'Teilnetz')]
+valid_combinations = [('Nord', 'Nordnetz'), # gültige Kombinationen eingeben 
+                      ('Ost', 'Ostnetz'),
+                      ('Süd', 'Südnetz'),
+                      ('West', 'Westnetz'),
+                      ('Südost', 'Südostnetz')]
 
 # Pfad zu der Netzleitzahlendatei
 file_Netzleitzahlen = Path(r'B:\# N-Gemeinsam\Trafostationsliste\Netzleitzahlen_Makro.xlsm')
@@ -34,7 +40,7 @@ excel_K3_Export[['Nummer NLZ', 'Nummer NKZ']] = (excel_K3_Export[column_name_K3V
 excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], errors='coerce') # NLZ zu Zahl konvertieren
 
 # Spalten löschen die nicht angezeigt werden sollen
-excel_K3_Export = excel_K3_Export.drop(columns=[column_name_K3V[1], 'Strukturelement']) 
+excel_K3_Export = excel_K3_Export.drop(columns=[column_name_K3V[1], 'Strukturelement']) # Überprüfen ob das passt
 
 # Anzahl Spalten bestimmen
 nb_columns_excel_K3_Export = excel_K3_Export.shape[1]
@@ -149,10 +155,23 @@ worksheet_copy = workbook.copy_worksheet(worksheet)
 worksheet_copy.title ='Temp'
 workbook.save(file_path)
 
-# Unterschiede zwischen den Spalten grafisch hervorheben und Sheet mit den Unterschieden erstellen
-for compare_column in compare_columns:
-    rows_different = highlight_differences(file_path, sheet_name, compare_column[0], compare_column[1], header_row, valid_combinations=None)
-    create_differences_sheet(file_path, compare_column, rows_different, header_row)
+# Unterschiede zwischen den Spalten grafisch hervorheben
+all_rows_different = []
+for idx, compare_column in enumerate(compare_columns):
+    rows_different = highlight_differences(file_path, sheet_name, compare_column[0], compare_column[1], header_row, valid_combinations)
+    all_rows_different.append(rows_different)
+
+# Schnittmenge aller Listen finden
+common_numbers = set(all_rows_different[0])
+for row in all_rows_different[1:]:
+    common_numbers &= set(row)
+all_rows_different = [[x for x in row if x not in common_numbers] for row in all_rows_different]    # Zahlen aus jeder Liste entfernen
+all_rows_different.append(list(common_numbers)) # Gemeinsame Zahlen als neue Liste anhängen
+
+# Sheets mit den Unterschieden erstellen
+for idx, compare_column in enumerate(compare_columns):
+    create_differences_sheet(file_path, compare_column, all_rows_different[idx], header_row)
+create_differences_sheet(file_path, ('leer', 'leer'), all_rows_different[-1], header_row)
 
 # Temporäres Sheet löschen
 workbook = load_workbook(file_path)
