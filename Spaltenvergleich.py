@@ -13,9 +13,9 @@ from utils import highlight_differences, de_sort_key
 
 # !!! Überpüfen: !!!
 path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp")    #Dateipfad überprüfen
-file_1_name = 'Trafoliste_K3V.xlsx'
+file_1_name = 'Trafoliste_mit_N2.xlsx'
 file_1_sheet_name = 'Tabelle1'
-file_1_header = 0
+file_1_header = 2
 file_1_filter_column = 'Nummer NKZ'
 file_1_filter_character = 't'
 file_1_needed_columns = ['Nummer NKZ']
