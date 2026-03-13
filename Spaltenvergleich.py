@@ -7,6 +7,7 @@ from openpyxl.formatting.rule import FormulaRule
 import io
 from pathlib import Path
 import matplotlib.pyplot as plt
+from datetime import datetime
 from utils import highlight_differences, de_sort_key, create_differences_sheet
 
 # Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
@@ -79,10 +80,11 @@ plt.xticks(rotation=90)
 # Diagramm speichern
 img_data = io.BytesIO()
 plt.savefig(img_data, format='png')
-plt.close() # schließt die Figure, um Speicher zu sparen
+plt.close() # schließt die figure, um Speicher zu sparen
 
 # Excel-Datei kreiren
-file_name = 'Unterschiede_K3V_Netzleitzahlen.xlsx'
+date_today = datetime.now().strftime('%Y%m%d')
+file_name = date_today + '_Unterschiede_K3V_Netzleitzahlen.xlsx'
 file_path = path_folder / 'Ergebnisse' / file_name
 sheet_name = 'Vergleich'
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
