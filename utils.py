@@ -1,5 +1,6 @@
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
+from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 import unicodedata
 
@@ -45,3 +46,25 @@ def de_sort_key(s):
         .decode("ascii")
         .lower()
     )
+
+def automatic_column_width(file_name, sheet_name):
+    wb = load_workbook(file_name)
+    ws = wb[sheet_name]
+
+    for column in ws.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+
+        for cell in column:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+
+        adjusted_width = max_length + 2  # etwas Puffer
+        if adjusted_width > 30 :    # Maximalbreite setzen
+            adjusted_width = 30
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+    wb.save(file_name)
