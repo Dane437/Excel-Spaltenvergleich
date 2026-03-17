@@ -12,12 +12,12 @@ from utils import highlight_differences, de_sort_key, automatic_column_width
 # Spalte einer Excel-Datei filtern nach bestimmten Zeichen
 
 # !!! Überpüfen: !!!
-path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Quellen')    #Dateipfad überprüfen
-file_1_name = 'Auszug Marktstammdatenregister 23.02.2026'
-file_1_sheet_name = 'Stromerzeuger (77)'
+path_folder = Path(r'\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\PV-Anlagen')    #Dateipfad überprüfen
+file_1_name = 'Stromerzeuger 2019-2024_mit Auswertung für KWP'
+file_1_sheet_name = 'PV-Anlagen'
 file_1_header = 0
 file_1_needed_columns = ['MaStR-Nr. der Einheit', 'Anzeige-Name der Einheit', 'Betriebsstatus', 'Systemstatus', 'NBP-Status', 'Energieträger', 'Bruttoleistung der Einheit', 
-                         'Nettonennleistung der Einheit', 'Inbetriebnahmedatum der Einheit', 'Inbetriebnahmedatum der Einheit am aktuellen Standort', 'Registrierungsdatum der Einheit',
+                         'Nettonennleistung der Einheit', 'Inbetriebnahmedatum der Einheit', 'Registrierungsdatum der Einheit',
                          'Straße']
 
 # Excel einlesen
@@ -40,7 +40,7 @@ excel_file_1['Inbetriebnahmedatum der Einheit'] = excel_file_1['Inbetriebnahmeda
 df_power_per_year = (excel_file_1.groupby('Inbetriebnahmedatum der Einheit')['Bruttoleistung der Einheit'].sum().reset_index())
 
 # Excel-Datei kreiren
-file_name = 'Auswertung_MaStR'
+file_name = 'Auswertung_MaStR_2024'
 date_today = datetime.now().strftime('%Y%m%d') + '_'
 path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Ergebnisse')
 file_path = path_folder / (date_today + file_name + '.xlsx')
