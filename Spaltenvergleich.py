@@ -12,29 +12,44 @@ from utils import highlight_differences, de_sort_key
 # Mergen von Zeilen zweier beliebiger Excel-Dateien
 
 # !!! Überpüfen: !!!
-path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp")    #Dateipfad überprüfen
-file_1_name = 'TS Messungen_20260311'
-file_1_sheet_name = 'Übersicht'
-file_1_merging_column = 'TS'
-file_1_header = 3
-file_1_needed_columns = ['TS']
+path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Temp2")    #Dateipfad überprüfen
+file_1_name = '2024'
+file_1_sheet_name = 'Stromerzeuger 2019-2024'
+file_1_merging_column = 'MaStR-Nr. der Einheit'
+file_1_header = 0
+file_1_needed_columns = ['MaStR-Nr. der Einheit']
 
-file_2_name = '2025-04-04_Stationen_Messwerte'
-file_2_sheet_name = 'Tabelle1'
-file_2_merging_column = 'Anlage'
-file_2_header = 1
-file_2_needed_columns = ['Anlage', 'Abschlussdatum', 'Leistung[kW]', 'Leistung[kVA]']
+file_2_name = '2026'
+file_2_sheet_name = 'Stromerzeuger (77)'
+file_2_merging_column = 'MaStR-Nr. der Einhei'
+file_2_header = 0
+file_2_needed_columns = ['MaStR-Nr. der Einhei', 'Betriebsstatus', 'Systemstatus', 'NBP-Status', 'Energieträger', 'Bruttoleistung der Einheit', 'Inbetriebnahmedatum der Einheit', 
+                         'Straße', 'Hausnummer', 'Registrierungsdatum der EEG-Anlage']
 
 # Excel einlesen
 excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
-excel_file_1 = excel_file_1[file_1_needed_columns]
+
 excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
-excel_file_2 = excel_file_2[file_2_needed_columns]
+
 
 # Daten individuel bearbeiten
-excel_file_2['Abschlussdatum'] = pd.to_datetime(excel_file_2['Abschlussdatum'], dayfirst=True)
-excel_file_2 = excel_file_2[excel_file_2['Abschlussdatum'].dt.year == 2024]
-excel_file_2['Leistung[kVA]'] = excel_file_2['Leistung[kVA]'].round(2)
+
+excel_file_1['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_1['Inbetriebnahmedatum der Einheit'], dayfirst=True)
+excel_file_1 = excel_file_1[excel_file_1['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
+
+excel_file_1 = excel_file_1[excel_file_1['Energieträger'] == 'Solare Strahlungsenergie']
+excel_file_1 = excel_file_1[excel_file_1['Betriebsstatus'] == 'In Betrieb']
+excel_file_1 = excel_file_1[excel_file_1['Systemstatus'] == 'Aktiviert']
+
+excel_file_2['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_2['Inbetriebnahmedatum der Einheit'], dayfirst=True)
+excel_file_2 = excel_file_2[excel_file_2['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
+
+excel_file_2 = excel_file_2[excel_file_2['Energieträger'] == 'Solare Strahlungsenergie']
+excel_file_2 = excel_file_2[excel_file_2['Betriebsstatus'] == 'In Betrieb']
+excel_file_2 = excel_file_2[excel_file_2['Systemstatus'] == 'Aktiviert']
+
+excel_file_1 = excel_file_1[file_1_needed_columns]
+excel_file_2 = excel_file_2[file_2_needed_columns]
 
 # Anzahl Spalten bestimmen
 nb_columns_excel_file_1 = excel_file_1.shape[1]
@@ -42,7 +57,7 @@ nb_columns_excel_file_2 = excel_file_2.shape[1]
 nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 
 # Datensätze zusammenführen
-merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_merging_column, right_on= file_2_merging_column, how='left', indicator=False)
+merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_merging_column, right_on= file_2_merging_column, how='outer', indicator=False)
 #merged_files.to_excel('Gesamt.xlsx', index=False)
 
 # Excel-Datei kreiren
