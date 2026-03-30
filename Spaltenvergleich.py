@@ -16,7 +16,7 @@ path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Do
 file_1_name = 'Trafoliste_K3V.xlsx'
 file_1_sheet_name = 'Tabelle1'
 file_1_sorting_column = 'Nummer NKZ'
-file_1_needed_columns = ['Nummer NKZ', 'Anlage', 'SN [kVA]', 'Betriebsstatus (Anlage)']
+file_1_needed_columns = ['Nummer NKZ', 'Anlage', 'Typ (Anlage)', 'SN [kVA]', 'Betriebsstatus (Anlage)']
 
 file_2_name = "Transformator_GIS.xlsx"
 file_2_sheet_name = 'Transformator (MSP)'
