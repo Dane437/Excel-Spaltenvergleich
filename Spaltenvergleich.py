@@ -12,91 +12,73 @@ from utils import highlight_differences, de_sort_key
 # Mergen von Zeilen zweier beliebiger Excel-Dateien
 
 # !!! Überpüfen: !!!
-path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Temp2")    #Dateipfad überprüfen
-file_1_name = '2024'
-file_1_sheet_name = 'Stromerzeuger 2019-2024'
-file_1_merging_column = 'MaStR-Nr. der Einheit'
-file_1_header = 0
-file_1_needed_columns = ['MaStR-Nr. der Einheit']
+path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Auslastung ONS")    #Dateipfad überprüfen
+file_1_name = 'Daten_Acron'
+file_1_sheet_name = 'List1'
+file_1_header = 0   # 0 -> Überschrift in erster Zeile
 
-file_2_name = '2026'
-file_2_sheet_name = 'Stromerzeuger (77)'
-file_2_merging_column = 'MaStR-Nr. der Einhei'
-file_2_header = 0
-file_2_needed_columns = ['MaStR-Nr. der Einhei', 'Betriebsstatus', 'Systemstatus', 'NBP-Status', 'Energieträger', 'Bruttoleistung der Einheit', 'Inbetriebnahmedatum der Einheit', 
-                         'Straße', 'Hausnummer', 'Registrierungsdatum der EEG-Anlage']
+file_2_name = 'Trafoliste_mit_N'
+file_2_sheet_name = 'Tabelle1'
+file_2_merging_column = 'Nummer NLZ'
+file_2_header = 2
+file_2_needed_columns = ['Nummer NLZ', 'Anlage', 'ZONE', 'SN [kVA]']
 
 # Excel einlesen
 excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
-
 excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
-
+excel_file_2[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_2['Nummer'].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
+excel_file_2 = excel_file_2[file_2_needed_columns]
 
 # Daten individuel bearbeiten
 
-excel_file_1['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_1['Inbetriebnahmedatum der Einheit'], dayfirst=True)
-excel_file_1 = excel_file_1[excel_file_1['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
 
-excel_file_1 = excel_file_1[excel_file_1['Energieträger'] == 'Solare Strahlungsenergie']
-excel_file_1 = excel_file_1[excel_file_1['Betriebsstatus'] == 'In Betrieb']
-excel_file_1 = excel_file_1[excel_file_1['Systemstatus'] == 'Aktiviert']
+new_df = pd.DataFrame(excel_file_1.iloc[:, 1:].columns, columns=['NLZ'])
+new_df['NLZ'] = new_df['NLZ'].str.extract(r'TS\s*(\d+)')
 
-excel_file_2['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_2['Inbetriebnahmedatum der Einheit'], dayfirst=True)
-excel_file_2 = excel_file_2[excel_file_2['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
+# Maximum
+max_indices_list = excel_file_1.iloc[:, 1:].idxmax().tolist()   # [:, 1:] ab zweiter Spalte
+new_df['Datum Maximum 2025'] = excel_file_1.iloc[max_indices_list, 0].values
+max_values = []
+for idx, indices in enumerate(max_indices_list):
+    max_values.append(excel_file_1.iloc[indices, idx + 1])
+new_df['Maximalwert 2025'] = max_values
 
-excel_file_2 = excel_file_2[excel_file_2['Energieträger'] == 'Solare Strahlungsenergie']
-excel_file_2 = excel_file_2[excel_file_2['Betriebsstatus'] == 'In Betrieb']
-excel_file_2 = excel_file_2[excel_file_2['Systemstatus'] == 'Aktiviert']
-
-excel_file_1 = excel_file_1[file_1_needed_columns]
-excel_file_2 = excel_file_2[file_2_needed_columns]
-
-# Anzahl Spalten bestimmen
-nb_columns_excel_file_1 = excel_file_1.shape[1]
-nb_columns_excel_file_2 = excel_file_2.shape[1]
-nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
+# Minimum
+min_indices_list = excel_file_1.iloc[:, 1:].idxmin().tolist()
+new_df['Datum Minimum 2025'] = excel_file_1.iloc[min_indices_list, 0].values
+min_values = []
+for idx, indices in enumerate(min_indices_list):
+    min_values.append(excel_file_1.iloc[indices, idx + 1])
+new_df['Minimalwert 2025'] = min_values
 
 # Datensätze zusammenführen
-merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_merging_column, right_on= file_2_merging_column, how='outer', indicator=False)
-#merged_files.to_excel('Gesamt.xlsx', index=False)
+merged_files: pd.DataFrame = pd.merge(new_df, excel_file_2, left_on= 'NLZ', right_on= file_2_merging_column, how='left', indicator=False)
+merged_files = merged_files.drop(columns=['Nummer NLZ'])
+merged_files = merged_files.reindex(columns=['NLZ', 'Anlage', 'ZONE', 'SN [kVA]', 'Datum Maximum 2025', 'Maximalwert 2025', 'Datum Minimum 2025', 'Minimalwert 2025'])
 
 # Excel-Datei kreiren
-file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
+file_name = 'Auswertung_ONS.xlsx'
 file_path = path_folder / file_name
+sheet_name = 'Auswertung'
+header_row = 1 # Excel Zeile wo die Spaltenüberschriften stehen sollen
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-    merged_files.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
+    merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=header_row - 1)
 
     # Zugriff auf das Workbook und Worksheet
     workbook = writer.book
-    worksheet = writer.sheets['Vergleich']
+    worksheet = writer.sheets[sheet_name]
+    max_row = worksheet.max_row
+    max_column = worksheet.max_column
 
-    # Überschrift erstellen und formatieren
-    worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=nb_columns_excel_file_1)
-    worksheet.merge_cells(start_row=1, start_column=nb_columns_excel_file_1+1, end_row=1, end_column=nb_columns)
-    cell_left = worksheet.cell(row=1, column=1)
-    cell_right = worksheet.cell(row=1, column=nb_columns_excel_file_1+1)
-    cell_left.value = file_1_name.split('.')[0]
-    cell_right.value = file_2_name.split('.')[0]
-    center_align = Alignment(horizontal="center", vertical="center")
-
-    cell_left.fill = PatternFill(start_color="C6EFCE", fill_type="solid")   # grüne Formatierung
-    cell_left.font = Font(bold=True, size=16)
-    cell_left.alignment = center_align
-
-    cell_right.fill = PatternFill(start_color="BDD7EE", fill_type="solid") # blaue Foramtierung
-    cell_right.font = Font(bold=True, size=16)
-    cell_right.alignment = center_align
-
-    for col in range(1, nb_columns + 1):
-        cell = worksheet.cell(row=2, column=col)
+    for col in range(1, max_column + 1):
+        cell = worksheet.cell(row=header_row, column=col)
         cell.fill = PatternFill(start_color="E7E6E6", fill_type="solid")    # graue Formatierung
         cell.font = Font(bold=True)
 
     # Trennungslinie erzeugen
-    max_row = worksheet.max_row
-    for row in range(1, max_row + 1):
-        cell = worksheet.cell(row=row, column=nb_columns_excel_file_1)
-        cell.border = Border(right=Side(style='thick'))
+    for row in range(header_row, max_row + 1):
+        worksheet.cell(row=row, column=4).border = Border(right=Side(style='thick'))
+        worksheet.cell(row=row, column=6).border = Border(right=Side(style='thick'))
 
     # Automatisch Spaltenbreite
     for column in worksheet.columns:
