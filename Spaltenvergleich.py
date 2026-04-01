@@ -30,8 +30,6 @@ excel_file_2[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_2['Nummer'].str.extract
 excel_file_2 = excel_file_2[file_2_needed_columns]
 
 # Daten individuel bearbeiten
-
-
 new_df = pd.DataFrame(excel_file_1.iloc[:, 1:].columns, columns=['NLZ'])
 new_df['NLZ'] = new_df['NLZ'].str.extract(r'TS\s*(\d+)')
 
@@ -56,6 +54,15 @@ merged_files: pd.DataFrame = pd.merge(new_df, excel_file_2, left_on= 'NLZ', righ
 merged_files = merged_files.drop(columns=['Nummer NLZ'])
 merged_files = merged_files.reindex(columns=['NLZ', 'Anlage', 'ZONE', 'SN [kVA]', 'Datum Maximum 2025', 'Maximalwert 2025', 'Datum Minimum 2025', 'Minimalwert 2025'])
 
+# Differenz
+merged_files['Differenz Max'] = merged_files['SN [kVA]'] - merged_files['Maximalwert 2025']
+merged_files['Differenz Min'] = merged_files['SN [kVA]'] - merged_files['Minimalwert 2025'].abs()
+merged_files['Differenz zu SN'] = merged_files[['Differenz Max', 'Differenz Min']].min(axis=1)
+merged_files = merged_files.drop(columns=['Differenz Max', 'Differenz Min'])
+
+# Sortieren
+merged_files = merged_files.sort_values(by='Differenz zu SN')
+
 # Excel-Datei kreiren
 file_name = 'Auswertung_ONS.xlsx'
 file_path = path_folder / file_name
@@ -79,6 +86,7 @@ with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
     for row in range(header_row, max_row + 1):
         worksheet.cell(row=row, column=4).border = Border(right=Side(style='thick'))
         worksheet.cell(row=row, column=6).border = Border(right=Side(style='thick'))
+        worksheet.cell(row=row, column=8).border = Border(right=Side(style='thick'))
 
     # Automatisch Spaltenbreite
     for column in worksheet.columns:
