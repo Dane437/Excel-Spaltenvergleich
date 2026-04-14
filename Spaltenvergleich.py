@@ -24,8 +24,8 @@ file_2_header = 2
 file_2_needed_columns = ['Nummer NLZ', 'Anlage', 'ZONE', 'SN [kVA]']
 
 # Excel einlesen
-excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
-excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
+excel_file_1 = pd.read_excel((file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
+excel_file_2 = pd.read_excel((file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
 excel_file_2[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_2['Nummer'].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
 excel_file_2 = excel_file_2[file_2_needed_columns]
 
@@ -68,7 +68,7 @@ file_name = 'Auswertung_ONS.xlsx'
 file_path = path_folder / file_name
 sheet_name = 'Auswertung'
 header_row = 1 # Excel Zeile wo die Spaltenüberschriften stehen sollen
-with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=header_row - 1)
 
     # Zugriff auf das Workbook und Worksheet
