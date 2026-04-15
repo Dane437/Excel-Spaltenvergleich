@@ -12,7 +12,7 @@ from utils import highlight_differences, de_sort_key, automatic_column_width
 # Dieses Script erstellt aus dem MaStR die Werte wie viel PV-Leistung für die einzelnen Jahre zugebaut wurde
 
 # !!! Überpüfen: !!!
-path_folder = Path(r'\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\PV-Anlagen')    #Dateipfad überprüfen
+path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\MaStR')    #Dateipfad überprüfen
 file_1_name = 'Marktstammdatenregister 09.04.2026'
 file_1_sheet_name = 'Stromerzeuger (81)'
 file_1_header = 0
@@ -42,7 +42,6 @@ df_power_per_year = (excel_file_1.groupby('Inbetriebnahmedatum der Einheit')['Br
 # Excel-Datei kreiren
 file_name = 'Auswertung_MaStR_2024'
 date_today = datetime.now().strftime('%Y%m%d') + '_'
-path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Ergebnisse')
 file_path = path_folder / (date_today + file_name + '.xlsx')
 
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
