@@ -9,10 +9,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from utils import highlight_differences, de_sort_key, create_differences_sheet
 
-# Mergen von Zeilen zweier beliebiger Excel-Dateien
+# Vergleich PV-Werte MaStR und EEGDB Datenbank
 
 # !!! Überpüfen: !!!
-path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\MaStR")    #Dateipfad überprüfen
+path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\MaStR_EEGDB')    #Dateipfad überprüfen
 file_1_name = '20260316_Auswertung_MaStR'
 file_1_sheet_name = 'Gesamte PVs'
 file_1_merging_column = 'Straße'
@@ -64,16 +64,16 @@ with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
     cell_right = worksheet.cell(row=1, column=nb_columns_excel_file_1+1)
     cell_left.value = file_1_name.split('.')[0]
     cell_right.value = file_2_name.split('.')[0]
-    center_align = Alignment(horizontal="center", vertical="center")
-    cell_left.fill = PatternFill(start_color="C6EFCE", fill_type="solid")   # grüne Formatierung
+    center_align = Alignment(horizontal='center', vertical='center')
+    cell_left.fill = PatternFill(start_color='C6EFCE', fill_type='solid')   # grüne Formatierung
     cell_left.font = Font(bold=True, size=16)
     cell_left.alignment = center_align
-    cell_right.fill = PatternFill(start_color="BDD7EE", fill_type="solid") # blaue Foramtierung
+    cell_right.fill = PatternFill(start_color='BDD7EE', fill_type='solid') # blaue Foramtierung
     cell_right.font = Font(bold=True, size=16)
     cell_right.alignment = center_align
     for col in range(1, nb_columns + 1):
         cell = worksheet.cell(row=2, column=col)
-        cell.fill = PatternFill(start_color="E7E6E6", fill_type="solid")    # graue Formatierung
+        cell.fill = PatternFill(start_color='E7E6E6', fill_type='solid')    # graue Formatierung
         cell.font = Font(bold=True)
     # Trennungslinie erzeugen
     max_row = worksheet.max_row
@@ -127,5 +127,5 @@ workbook = load_workbook(file_path)
 del workbook['Temp']
 workbook.save(file_path)
 
-print("Datei wurde erfolgreich gespeichert!")
+print('Datei wurde erfolgreich gespeichert!')
 
