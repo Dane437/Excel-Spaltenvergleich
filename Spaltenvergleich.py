@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from utils import highlight_differences, de_sort_key, automatic_column_width
 
-# Spalte einer Excel-Datei filtern nach bestimmten Zeichen
+# Dieses Script erstellt aus dem MaStR die Werte wie viel PV-Leistung für die einzelnen Jahre zugebaut wurde
 
 # !!! Überpüfen: !!!
 path_folder = Path(r'\\estw-01\Bereich-N\NG\NGE\Statistiken ESTW\PV-Anlagen')    #Dateipfad überprüfen
-file_1_name = 'Stromerzeuger 2019-2024_mit Auswertung für KWP'
-file_1_sheet_name = 'PV-Anlagen'
+file_1_name = 'Marktstammdatenregister 09.04.2026'
+file_1_sheet_name = 'Stromerzeuger (81)'
 file_1_header = 0
 file_1_needed_columns = ['MaStR-Nr. der Einheit', 'Anzeige-Name der Einheit', 'Betriebsstatus', 'Systemstatus', 'NBP-Status', 'Energieträger', 'Bruttoleistung der Einheit', 
                          'Nettonennleistung der Einheit', 'Inbetriebnahmedatum der Einheit', 'Registrierungsdatum der Einheit',
