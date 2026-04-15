@@ -7,18 +7,20 @@ from openpyxl.formatting.rule import FormulaRule
 import io
 from pathlib import Path
 import matplotlib.pyplot as plt
-from utils import highlight_differences, de_sort_key
+from utils import highlight_differences, de_sort_key, create_differences_sheet
 
 # Datenvergleich zwischen zwei Excel-Dateien, hier Trafoliste K3V und Trafoliste aus dem GIS
 
 # !!! Überpüfen: !!!
-path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp")    #Dateipfad überprüfen
-file_1_name = 'Trafoliste_K3V.xlsx'
+path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\K3V-GIS")    #Dateipfad überprüfen
+file_1_name = 'Trafoliste_mit_N'
+file_1_header = 2 # Spaltenname in Zeile 3
 file_1_sheet_name = 'Tabelle1'
 file_1_sorting_column = 'Nummer NKZ'
 file_1_needed_columns = ['Nummer NKZ', 'Anlage', 'Typ (Anlage)', 'SN [kVA]', 'Betriebsstatus (Anlage)']
 
-file_2_name = "Transformator_GIS.xlsx"
+file_2_name = "Transformator (MSP)"
+file_2_header = 4 # Spaltenname in Zeile 5
 file_2_sheet_name = 'Transformator (MSP)'
 file_2_sorting_column = 'Kurzname'
 file_2_needed_columns = ['Kurzname', 'Name Station', 'Leistung (kVA)', 'Status']
@@ -26,12 +28,18 @@ file_2_needed_columns = ['Kurzname', 'Name Station', 'Leistung (kVA)', 'Status']
 compare_columns = [('SN [kVA]', 'Leistung (kVA)')]
                    #, ('Betriebsstatus (Anlage)', 'Status')]
 
+# Pfad zu der Netzleitzahlendatei
+path_Netzleitzahlen = Path(r"B:\# N-Gemeinsam\Trafostationsliste\Netzleitzahlen_Makro.xlsm")
 
 # Excel einlesen
-excel_file_1 = pd.read_excel(path_folder / file_1_name, sheet_name=file_1_sheet_name)
+excel_Netzleitzahlen = pd.read_excel(path_Netzleitzahlen, sheet_name="Stationsliste")
+excel_Netzleitzahlen['NLZ'] = pd.to_numeric(excel_Netzleitzahlen['NLZ'], errors='coerce')
+
+# Excel einlesen
+excel_file_1 = pd.read_excel(path_folder / (file_1_name + '.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
 excel_file_1[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_1['Nummer'].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
 excel_file_1 = excel_file_1[file_1_needed_columns]  # auskommentieren, wenn alle Spalten angezeigt werden sollen
-excel_file_2 = pd.read_excel(path_folder / file_2_name, sheet_name=file_2_sheet_name)
+excel_file_2 = pd.read_excel(path_folder / (file_2_name + '.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
 excel_file_2 = excel_file_2[file_2_needed_columns] # auskommentieren, wenn alle Spalten angezeigt werden sollen
 
 
@@ -44,18 +52,25 @@ nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 excel_file_1['idx'] = excel_file_1.groupby('Nummer NKZ').cumcount()
 excel_file_2['idx'] = excel_file_2.groupby('Kurzname').cumcount() 
 
+excel_file_2_merged = pd.merge(excel_file_2, excel_Netzleitzahlen[['NKZ', 'Stationstyp']], left_on='Kurzname', right_on='NKZ', how='left')
+
 # Datensätze zusammenführen
-merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= [file_1_sorting_column, 'idx'], right_on= [file_2_sorting_column, 'idx'], how='outer', indicator=False)
+merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2_merged, left_on= [file_1_sorting_column, 'idx'], right_on= [file_2_sorting_column, 'idx'], how='outer', indicator=False)
 merged_files = merged_files.drop(columns='idx') 
+
+merged_files = merged_files[(merged_files['Typ (Anlage)'].isin(['Netzstation', 'Schalthaus', '']) | merged_files['Typ (Anlage)'].isna()) & 
+                            (merged_files['Stationstyp'].isin(['Netzstation', 'Schalthaus', '']) | merged_files['Stationstyp'].isna())]  
 
 # Excel-Datei kreiren
 file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
-with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
-    merged_files.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
+file_path = path_folder / file_name
+sheet_name = 'Vergleich'
+with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+    merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=1)
 
     # Zugriff auf das Workbook und Worksheet
     workbook = writer.book
-    worksheet = writer.sheets['Vergleich']
+    worksheet = writer.sheets[sheet_name]
 
     # Überschrift erstellen und formatieren
     worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=nb_columns_excel_file_1)
@@ -104,7 +119,22 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
 
 # Unterschiede zwischen den Spalten grafisch hervorheben
 for column_1, column_2 in compare_columns:
-    highlight_differences(file_name, 'Vergleich', column_1, column_2, header_row=2, valid_combinations=None, empty_is_difference=False)
+    rows_different = highlight_differences(file_path, sheet_name, column_1, column_2, header_row=2, valid_combinations=None, empty_is_difference=False)
+header_row = 2  # in dieser Reihe stehen meine Spaltenüberschriften
+
+# Temporäres Sheet erstellen, wird für die Funktion create_differences_sheet benötigt
+workbook = load_workbook(file_path)
+worksheet = workbook[sheet_name]
+worksheet_copy = workbook.copy_worksheet(worksheet)
+worksheet_copy.title ='Temp'
+workbook.save(file_path)
+
+create_differences_sheet(file_path, rows_different, header_row)
+
+# Temporäres Sheet löschen
+workbook = load_workbook(file_path)
+del workbook['Temp']
+workbook.save(file_path)
 
 print("Datei wurde erfolgreich gespeichert!")
 

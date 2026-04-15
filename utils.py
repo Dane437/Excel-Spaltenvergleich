@@ -9,6 +9,7 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
     ws = wb[sheet_name]
 
     headers = {cell.value: cell.column for cell in ws[header_row]}
+    rows_different = []
 
     for row in range(header_row + 1, ws.max_row + 1):
         c1 = ws.cell(row=row, column=headers[col_left])
@@ -20,6 +21,7 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
 
         if not valid_combinations:
             if c1.value != c2.value:
+                rows_different.append(row)
                 if one_is_empty:
                     c1.fill = PatternFill(start_color='FFEB9C', fill_type='solid')  # gelbe Formatierung
                     c2.fill = PatternFill(start_color='FFEB9C', fill_type='solid')  # gelbe Formatierung
@@ -35,6 +37,7 @@ def highlight_differences(file_name, sheet_name, col_left, col_right, header_row
             c2.fill = PatternFill(start_color='FFCCCC', fill_type='solid')  # rote Formatierung
 
     wb.save(file_name)
+    return rows_different
 
 
 # Hilfsfunktion zum Sortieren von Strings mit deutschen Umlauten
@@ -45,3 +48,17 @@ def de_sort_key(s):
         .decode("ascii")
         .lower()
     )
+
+
+def create_differences_sheet(file_name, rows_different, header_row):
+    wb = load_workbook(file_name)
+    ws = wb['Temp']
+    headers = {cell.value: cell.column for cell in ws[header_row]}
+    worksheet_copy = wb.copy_worksheet(ws)
+    worksheet_copy.title = 'Unterschiede'
+
+    for row in range(worksheet_copy.max_row, header_row, -1):    # zählt rückwärts und stoppt bei header_row
+        if row not in rows_different:
+             worksheet_copy.delete_rows(row)
+
+    wb.save(file_name)
