@@ -12,41 +12,40 @@ from utils import highlight_differences, de_sort_key
 # Mergen von Zeilen zweier beliebiger Excel-Dateien
 
 # !!! Überpüfen: !!!
-path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Temp2")    #Dateipfad überprüfen
-file_1_name = '2024'
-file_1_sheet_name = 'Stromerzeuger 2019-2024'
-file_1_merging_column = 'MaStR-Nr. der Einheit'
+path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\k")    #Dateipfad überprüfen
+file_1_name = 'Werte'
+file_1_sheet_name = 'List1'
+file_1_merging_column = 'NKZk'
 file_1_header = 0
-file_1_needed_columns = ['MaStR-Nr. der Einheit']
+file_1_needed_columns = ['NLZk', 'NKZk']
 
-file_2_name = '2026'
-file_2_sheet_name = 'Stromerzeuger (77)'
-file_2_merging_column = 'MaStR-Nr. der Einhei'
+file_2_name = 'Netzleitzahlen_Makro'
+file_2_sheet_name = 'Stationsliste'
+file_2_merging_column = 'NKZ'
 file_2_header = 0
-file_2_needed_columns = ['MaStR-Nr. der Einhei', 'Betriebsstatus', 'Systemstatus', 'NBP-Status', 'Energieträger', 'Bruttoleistung der Einheit', 'Inbetriebnahmedatum der Einheit', 
-                         'Straße', 'Hausnummer', 'Registrierungsdatum der EEG-Anlage']
+file_2_needed_columns = ['NKZ', 'NLZ']
 
 # Excel einlesen
 excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
 
-excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
+excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsm'), sheet_name=file_2_sheet_name, header=file_2_header)
 
 
 # Daten individuel bearbeiten
 
-excel_file_1['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_1['Inbetriebnahmedatum der Einheit'], dayfirst=True)
-excel_file_1 = excel_file_1[excel_file_1['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
+# excel_file_1['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_1['Inbetriebnahmedatum der Einheit'], dayfirst=True)
+# excel_file_1 = excel_file_1[excel_file_1['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
 
-excel_file_1 = excel_file_1[excel_file_1['Energieträger'] == 'Solare Strahlungsenergie']
-excel_file_1 = excel_file_1[excel_file_1['Betriebsstatus'] == 'In Betrieb']
-excel_file_1 = excel_file_1[excel_file_1['Systemstatus'] == 'Aktiviert']
+# excel_file_1 = excel_file_1[excel_file_1['Energieträger'] == 'Solare Strahlungsenergie']
+# excel_file_1 = excel_file_1[excel_file_1['Betriebsstatus'] == 'In Betrieb']
+# excel_file_1 = excel_file_1[excel_file_1['Systemstatus'] == 'Aktiviert']
 
-excel_file_2['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_2['Inbetriebnahmedatum der Einheit'], dayfirst=True)
-excel_file_2 = excel_file_2[excel_file_2['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
+# excel_file_2['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_2['Inbetriebnahmedatum der Einheit'], dayfirst=True)
+# excel_file_2 = excel_file_2[excel_file_2['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
 
-excel_file_2 = excel_file_2[excel_file_2['Energieträger'] == 'Solare Strahlungsenergie']
-excel_file_2 = excel_file_2[excel_file_2['Betriebsstatus'] == 'In Betrieb']
-excel_file_2 = excel_file_2[excel_file_2['Systemstatus'] == 'Aktiviert']
+# excel_file_2 = excel_file_2[excel_file_2['Energieträger'] == 'Solare Strahlungsenergie']
+# excel_file_2 = excel_file_2[excel_file_2['Betriebsstatus'] == 'In Betrieb']
+# excel_file_2 = excel_file_2[excel_file_2['Systemstatus'] == 'Aktiviert']
 
 excel_file_1 = excel_file_1[file_1_needed_columns]
 excel_file_2 = excel_file_2[file_2_needed_columns]
@@ -63,8 +62,9 @@ merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_
 # Excel-Datei kreiren
 file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
 file_path = path_folder / file_name
+sheet_name = 'Vergleich'
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-    merged_files.to_excel(writer, sheet_name='Vergleich', index=False, startrow=1)
+    merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=1)
 
     # Zugriff auf das Workbook und Worksheet
     workbook = writer.book
@@ -114,6 +114,9 @@ with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
         if adjusted_width > 30 :    # Maximalbreite setzen
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
+
+highlight_differences(file_path, sheet_name, 'NKZk', 'NKZ', header_row=2, valid_combinations=None)
+highlight_differences(file_path, sheet_name, 'NLZk', 'NLZ', header_row=2, valid_combinations=None)
 
 print("Datei wurde erfolgreich gespeichert!")
 
