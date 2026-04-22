@@ -16,16 +16,23 @@ path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Do
 file_1_name = 'Daten_Acron'
 file_1_sheet_name = 'List1'
 file_1_header = 0   # 0 -> Überschrift in erster Zeile
+file_1_name = file_1_name +'.xlsx'
 
 file_2_name = 'Trafoliste_mit_N'
 file_2_sheet_name = 'Tabelle1'
 file_2_merging_column = 'Nummer NLZ'
 file_2_header = 2
 file_2_needed_columns = ['Nummer NLZ', 'Anlage', 'ZONE', 'SN [kVA]']
+file_2_name = file_2_name +'.xlsx'
+
+file_1_name = path_folder / file_1_name  # Löschen wenn ich aus Script Datei erstelle
+file_2_name = path_folder / file_2_name  # Löschen wenn ich aus Script Datei erstelle  + weiter unten nochmals bei Dateierstellung die Zeile löschen
+
+print("Lädt ...")
 
 # Excel einlesen
-excel_file_1 = pd.read_excel((file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
-excel_file_2 = pd.read_excel((file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
+excel_file_1 = pd.read_excel(file_1_name, sheet_name=file_1_sheet_name, header=file_1_header)
+excel_file_2 = pd.read_excel(file_2_name, sheet_name=file_2_sheet_name, header=file_2_header)
 excel_file_2[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_2['Nummer'].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
 excel_file_2 = excel_file_2[file_2_needed_columns]
 
@@ -35,37 +42,37 @@ new_df['NLZ'] = new_df['NLZ'].str.extract(r'TS\s*(\d+)')
 
 # Maximum
 max_indices_list = excel_file_1.iloc[:, 1:].idxmax().tolist()   # [:, 1:] ab zweiter Spalte
-new_df['Datum Maximum 2025'] = excel_file_1.iloc[max_indices_list, 0].values
+new_df['Datum Maximum'] = excel_file_1.iloc[max_indices_list, 0].values
 max_values = []
 for idx, indices in enumerate(max_indices_list):
     max_values.append(excel_file_1.iloc[indices, idx + 1])
-new_df['Maximalwert 2025'] = max_values
+new_df['Maximalwert'] = max_values
 
 # Minimum
 min_indices_list = excel_file_1.iloc[:, 1:].idxmin().tolist()
-new_df['Datum Minimum 2025'] = excel_file_1.iloc[min_indices_list, 0].values
+new_df['Datum Minimum'] = excel_file_1.iloc[min_indices_list, 0].values
 min_values = []
 for idx, indices in enumerate(min_indices_list):
     min_values.append(excel_file_1.iloc[indices, idx + 1])
-new_df['Minimalwert 2025'] = min_values
+new_df['Minimalwert'] = min_values
 
 # Datensätze zusammenführen
 merged_files: pd.DataFrame = pd.merge(new_df, excel_file_2, left_on= 'NLZ', right_on= file_2_merging_column, how='left', indicator=False)
 merged_files = merged_files.drop(columns=['Nummer NLZ'])
-merged_files = merged_files.reindex(columns=['NLZ', 'Anlage', 'ZONE', 'SN [kVA]', 'Datum Maximum 2025', 'Maximalwert 2025', 'Datum Minimum 2025', 'Minimalwert 2025'])
+merged_files = merged_files.reindex(columns=['NLZ', 'Anlage', 'ZONE', 'SN [kVA]', 'Datum Maximum', 'Maximalwert', 'Datum Minimum', 'Minimalwert'])
 
 # Differenz
-merged_files['Differenz Max'] = merged_files['SN [kVA]'] - merged_files['Maximalwert 2025']
-merged_files['Differenz Min'] = merged_files['SN [kVA]'] - merged_files['Minimalwert 2025'].abs()
+merged_files['Differenz Max'] = merged_files['SN [kVA]'] - merged_files['Maximalwert']
+merged_files['Differenz Min'] = merged_files['SN [kVA]'] - merged_files['Minimalwert'].abs()
 merged_files['Differenz zu SN'] = merged_files[['Differenz Max', 'Differenz Min']].min(axis=1)
 merged_files = merged_files.drop(columns=['Differenz Max', 'Differenz Min'])
 
 # Sortieren
-merged_files = merged_files.sort_values(by='Differenz zu SN')
+merged_files = merged_files.sort_values(by='NLZ')
 
 # Excel-Datei kreiren
 file_name = 'Auswertung_ONS.xlsx'
-file_path = path_folder / file_name
+file_name = path_folder / file_name  # Löschen wenn ich aus Script Datei erstelle
 sheet_name = 'Auswertung'
 header_row = 1 # Excel Zeile wo die Spaltenüberschriften stehen sollen
 with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
@@ -105,5 +112,5 @@ with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
 
-print("Datei wurde erfolgreich gespeichert!")
+print("Datei wurde erfolgreich erstellt!")
 
