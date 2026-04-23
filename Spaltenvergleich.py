@@ -12,16 +12,23 @@ from utils import highlight_differences, de_sort_key, automatic_column_width
 # Dieses Script erstellt aus dem MaStR die Werte wie viel PV-Leistung für die einzelnen Jahre zugebaut wurde
 
 # !!! Überpüfen: !!!
-path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\MaStR')    #Dateipfad überprüfen
-file_1_name = 'Marktstammdatenregister 09.04.2026'
-file_1_sheet_name = 'Stromerzeuger (81)'
+run_in_vs_code = False
+path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\MaStR')
+file_1_name = 'MaStR'
+file_1_sheet_name = 'Stromerzeuger'
 file_1_header = 0
 file_1_needed_columns = ['MaStR-Nr. der Einheit', 'Anzeige-Name der Einheit', 'Betriebsstatus', 'Systemstatus', 'NBP-Status', 'Energieträger', 'Bruttoleistung der Einheit', 
                          'Nettonennleistung der Einheit', 'Inbetriebnahmedatum der Einheit', 'Registrierungsdatum der Einheit',
                          'Postleitzahl', 'Straße']
 
+print('Lädt...')
+
 # Excel einlesen
-excel_file_1 = pd.read_excel(path_folder / (file_1_name + '.xlsx'), file_1_sheet_name, header=file_1_header)
+if run_in_vs_code:
+    path_folder = path_folder / (file_1_name + '.xlsx')
+else:
+    path_folder = file_1_name + '.xlsx' 
+excel_file_1 = pd.read_excel(path_folder, file_1_sheet_name, header=file_1_header)
 
 # Daten bearbeiten
 excel_file_1['Straße'] = excel_file_1['Straße'] + ' ' + excel_file_1['Hausnummer'].fillna('').astype(str)
@@ -71,22 +78,25 @@ for i in range(max_storage_capacity + 1):
 df_all_storage_per_cap = pd.DataFrame({'Kapazität in kW': list(range(max_storage_capacity + 1)), 'Summe': data})
 
 # Excel-Datei kreiren
-file_name = 'PV_Auswertung_MaStR'
+file_name = 'Auswertung_MaStR'
 date_today = datetime.now().strftime('%Y%m%d') + '_'
-file_path = path_folder / (date_today + file_name + '.xlsx')
+if run_in_vs_code:
+    file_path = path_folder / (date_today + file_name + '.xlsx')
+else:
+    file_path = date_today + file_name + '.xlsx'
 
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-    df_all_pv.to_excel(writer, sheet_name='Gesamte PVs', index=False)
+    #df_all_pv.to_excel(writer, sheet_name='Gesamte PVs', index=False)
     df_all_pv_power_per_year.to_excel(writer, sheet_name='PV-Leistung pro Jahr', index=False)
     df_all_pv_power_per_cap.to_excel(writer, sheet_name='PV Größenverteilung', index=False)
     df_wn_pv_power_per_year.to_excel(writer, sheet_name='Westnetz PV-Leistung pro Jahr', index=False)
     df_wn_pv_power_per_cap.to_excel(writer, sheet_name='Westnetz PV Größenverteilung', index=False)
     df_all_storage_per_year.to_excel(writer, sheet_name='Speicherleistung pro Jahr', index=False)
     df_all_storage_per_cap.to_excel(writer, sheet_name='Speicher Größenverteilung', index=False)
-    df_all_storage.to_excel(writer, sheet_name='Gesamte Speicher', index=False)
+    #df_all_storage.to_excel(writer, sheet_name='Gesamte Speicher', index=False)
 
-sheet_names = ['Gesamte PVs', 'PV-Leistung pro Jahr', 'PV Größenverteilung', 'Westnetz PV-Leistung pro Jahr', 'Westnetz PV Größenverteilung', 'Speicherleistung pro Jahr', 
-               'Speicher Größenverteilung', 'Gesamte Speicher']
+sheet_names = ['PV-Leistung pro Jahr', 'PV Größenverteilung', 'Westnetz PV-Leistung pro Jahr', 'Westnetz PV Größenverteilung', 'Speicherleistung pro Jahr', 
+               'Speicher Größenverteilung']
 for sheet_name in sheet_names: automatic_column_width(file_path, sheet_name=sheet_name)
 
 print('Datei wurde erfolgreich erstellt!')
