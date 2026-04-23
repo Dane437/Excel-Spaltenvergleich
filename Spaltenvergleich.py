@@ -7,30 +7,33 @@ from openpyxl.formatting.rule import FormulaRule
 import io
 from pathlib import Path
 import matplotlib.pyplot as plt
+from datetime import datetime
 from utils import highlight_differences, de_sort_key
 
 # Mergen von Zeilen zweier beliebiger Excel-Dateien
 
 # !!! Überpüfen: !!!
+run_in_vs_code = False
 path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Auslastung ONS")    #Dateipfad überprüfen
 file_1_name = 'Daten_Acron'
 file_1_sheet_name = 'List1'
 file_1_header = 0   # 0 -> Überschrift in erster Zeile
 file_1_name = file_1_name +'.xlsx'
 
-file_2_name = 'Trafoliste_mit_N'
+file_2_name = 'Trafoliste_K3V'
 file_2_sheet_name = 'Tabelle1'
 file_2_merging_column = 'Nummer NLZ'
 file_2_header = 2
 file_2_needed_columns = ['Nummer NLZ', 'Anlage', 'ZONE', 'SN [kVA]']
 file_2_name = file_2_name +'.xlsx'
 
-file_1_name = path_folder / file_1_name  # Löschen wenn ich aus Script Datei erstelle
-file_2_name = path_folder / file_2_name  # Löschen wenn ich aus Script Datei erstelle  + weiter unten nochmals bei Dateierstellung die Zeile löschen
-
 print("Lädt ...")
 
 # Excel einlesen
+if run_in_vs_code:
+    file_1_name = path_folder / file_1_name
+    file_2_name = path_folder / file_2_name
+
 excel_file_1 = pd.read_excel(file_1_name, sheet_name=file_1_sheet_name, header=file_1_header)
 excel_file_2 = pd.read_excel(file_2_name, sheet_name=file_2_sheet_name, header=file_2_header)
 excel_file_2[['Nummer NLZ', 'Nummer NKZ']] = (excel_file_2['Nummer'].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
@@ -71,10 +74,14 @@ merged_files = merged_files.drop(columns=['Differenz Max', 'Differenz Min'])
 merged_files = merged_files.sort_values(by='NLZ')
 
 # Excel-Datei kreiren
-file_name = 'Auswertung_ONS.xlsx'
-file_name = path_folder / file_name  # Löschen wenn ich aus Script Datei erstelle
+file_name = 'Auslastung_ONS'
 sheet_name = 'Auswertung'
 header_row = 1 # Excel Zeile wo die Spaltenüberschriften stehen sollen
+date_today = datetime.now().strftime('%Y%m%d') + '_'
+if run_in_vs_code:
+    file_name = path_folder / (date_today + file_name + '.xlsx')
+else:
+    file_name = date_today + file_name + '.xlsx'
 with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
     merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=header_row - 1)
 
