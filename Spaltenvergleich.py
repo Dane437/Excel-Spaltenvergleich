@@ -6,117 +6,67 @@ from openpyxl.drawing.image import Image
 from openpyxl.formatting.rule import FormulaRule
 import io
 from pathlib import Path
+from datetime import datetime
 import matplotlib.pyplot as plt
-from utils import highlight_differences, de_sort_key
+from utils import highlight_differences, de_sort_key, create_district_sheets
 
-# Mergen von Zeilen zweier beliebiger Excel-Dateien
+# Hausanschlüsse Analyse
 
 # !!! Überpüfen: !!!
-path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\k")    #Dateipfad überprüfen
-file_1_name = 'Werte'
-file_1_sheet_name = 'List1'
-file_1_merging_column = 'NKZk'
-file_1_header = 0
-file_1_needed_columns = ['NLZk', 'NKZk']
+run_in_vs_code = True
+path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Hausanschlüsse')    #Dateipfad überprüfen
+file_1_name = 'Alle Anschlüsse'
+file_1_sheet_name = 'Hausanschluss'
+file_1_merging_column = 'Absicherung'
+file_1_header = 4   # Spaltenname in Zeile 5
+file_1_needed_columns = ['Absicherung', 'Teilnetz', 'Ortsteil']
 
-file_2_name = 'Netzleitzahlen_Makro'
-file_2_sheet_name = 'Stationsliste'
-file_2_merging_column = 'NKZ'
+file_2_sheet_name = 'Zuordnungstabelle'
+file_2_merging_column = 'Sicherungseinsätze'
 file_2_header = 0
-file_2_needed_columns = ['NKZ', 'NLZ']
+file_2_needed_columns = ['Sicherungseinsätze', 'Leistung']
 
 # Excel einlesen
-excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
-
-excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsm'), sheet_name=file_2_sheet_name, header=file_2_header)
-
+if run_in_vs_code:
+    file_path = path_folder / (file_1_name + '.xlsx')
+else:
+    file_path = file_1_name + '.xlsx' 
+df_Hausanschluss = pd.read_excel(file_path, sheet_name=file_1_sheet_name, header=file_1_header)
+df_Zuordnungstabelle = pd.read_excel(file_path, sheet_name=file_2_sheet_name, header=file_2_header)
 
 # Daten individuel bearbeiten
-
-# excel_file_1['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_1['Inbetriebnahmedatum der Einheit'], dayfirst=True)
-# excel_file_1 = excel_file_1[excel_file_1['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
-
-# excel_file_1 = excel_file_1[excel_file_1['Energieträger'] == 'Solare Strahlungsenergie']
-# excel_file_1 = excel_file_1[excel_file_1['Betriebsstatus'] == 'In Betrieb']
-# excel_file_1 = excel_file_1[excel_file_1['Systemstatus'] == 'Aktiviert']
-
-# excel_file_2['Inbetriebnahmedatum der Einheit'] = pd.to_datetime(excel_file_2['Inbetriebnahmedatum der Einheit'], dayfirst=True)
-# excel_file_2 = excel_file_2[excel_file_2['Inbetriebnahmedatum der Einheit'].dt.year == 2024]
-
-# excel_file_2 = excel_file_2[excel_file_2['Energieträger'] == 'Solare Strahlungsenergie']
-# excel_file_2 = excel_file_2[excel_file_2['Betriebsstatus'] == 'In Betrieb']
-# excel_file_2 = excel_file_2[excel_file_2['Systemstatus'] == 'Aktiviert']
-
-excel_file_1 = excel_file_1[file_1_needed_columns]
-excel_file_2 = excel_file_2[file_2_needed_columns]
-
-# Anzahl Spalten bestimmen
-nb_columns_excel_file_1 = excel_file_1.shape[1]
-nb_columns_excel_file_2 = excel_file_2.shape[1]
-nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
+df_Hausanschluss = df_Hausanschluss[file_1_needed_columns]
+df_Zuordnungstabelle = df_Zuordnungstabelle[file_2_needed_columns]
+df_Zuordnungstabelle['Leistung'] = df_Zuordnungstabelle['Leistung'].str.replace(',', '.', regex=False)  # Komma → Punkt
+df_Zuordnungstabelle['Leistung'] = pd.to_numeric(df_Zuordnungstabelle['Leistung'], errors='coerce')
+df_Hausanschluss['Absicherung'] = df_Hausanschluss['Absicherung'].str.extract(r'\s(.+)')
+df_Hausanschluss['Absicherung'] = df_Hausanschluss['Absicherung'].replace('Unterlagen vorh.', None)
 
 # Datensätze zusammenführen
-merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_merging_column, right_on= file_2_merging_column, how='outer', indicator=False)
-#merged_files.to_excel('Gesamt.xlsx', index=False)
+df_merged_files: pd.DataFrame = pd.merge(df_Hausanschluss, df_Zuordnungstabelle, left_on= file_1_merging_column, right_on= file_2_merging_column, how='left', indicator=False)
+df_missing_values = df_merged_files[df_merged_files['Sicherungseinsätze'].isna()]
+df_only = df_missing_values.drop_duplicates(subset=['Absicherung'])
+
+#anzahl = df_missing_values['Absicherung'].isna().sum().astype('int64')
+#print(anzahl)
+
+list_districts = df_merged_files.loc[df_merged_files['Ortsteil'] != '-', 'Ortsteil'].dropna().unique().tolist() # Liste aller Ortsteile
 
 # Excel-Datei kreiren
-file_name = 'Unterschiede_' + file_1_name.split('.')[0] + '-' + file_2_name.split('.')[0] + '.xlsx'
-file_path = path_folder / file_name
-sheet_name = 'Vergleich'
+date_today = datetime.now().strftime('%Y%m%d') + '_'
+file_name = 'Hausanschluss_Auswertung'
+if run_in_vs_code:
+    file_path = path_folder / (date_today + file_name + '.xlsx')
+else:
+    file_path = date_today + file_name + '.xlsx'
+sheet_name = 'Gesamt'
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-    merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=1)
+    #df_merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=0)
+    create_district_sheets(writer, df_merged_files, district_name=sheet_name)
+    #df_missing_values.to_excel(writer, sheet_name='Fehlender Sicherungswert', index=False, startrow=0)
+    #df_only.to_excel(writer, sheet_name='Doppelte entfernt', index=False, startrow=0)
+    for district in list_districts:
+        create_district_sheets(writer, df_merged_files, district_name=district)
 
-    # Zugriff auf das Workbook und Worksheet
-    workbook = writer.book
-    worksheet = writer.sheets['Vergleich']
-
-    # Überschrift erstellen und formatieren
-    worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=nb_columns_excel_file_1)
-    worksheet.merge_cells(start_row=1, start_column=nb_columns_excel_file_1+1, end_row=1, end_column=nb_columns)
-    cell_left = worksheet.cell(row=1, column=1)
-    cell_right = worksheet.cell(row=1, column=nb_columns_excel_file_1+1)
-    cell_left.value = file_1_name.split('.')[0]
-    cell_right.value = file_2_name.split('.')[0]
-    center_align = Alignment(horizontal="center", vertical="center")
-
-    cell_left.fill = PatternFill(start_color="C6EFCE", fill_type="solid")   # grüne Formatierung
-    cell_left.font = Font(bold=True, size=16)
-    cell_left.alignment = center_align
-
-    cell_right.fill = PatternFill(start_color="BDD7EE", fill_type="solid") # blaue Foramtierung
-    cell_right.font = Font(bold=True, size=16)
-    cell_right.alignment = center_align
-
-    for col in range(1, nb_columns + 1):
-        cell = worksheet.cell(row=2, column=col)
-        cell.fill = PatternFill(start_color="E7E6E6", fill_type="solid")    # graue Formatierung
-        cell.font = Font(bold=True)
-
-    # Trennungslinie erzeugen
-    max_row = worksheet.max_row
-    for row in range(1, max_row + 1):
-        cell = worksheet.cell(row=row, column=nb_columns_excel_file_1)
-        cell.border = Border(right=Side(style='thick'))
-
-    # Automatisch Spaltenbreite
-    for column in worksheet.columns:
-        max_length = 0
-        column_letter = get_column_letter(column[0].column)
-
-        for cell in column:
-            try:
-                if cell.value:
-                    max_length = max(max_length, len(str(cell.value)))
-            except:
-                pass
-
-        adjusted_width = max_length + 2  # etwas Puffer
-        if adjusted_width > 30 :    # Maximalbreite setzen
-            adjusted_width = 30
-        worksheet.column_dimensions[column_letter].width = adjusted_width
-
-highlight_differences(file_path, sheet_name, 'NKZk', 'NKZ', header_row=2, valid_combinations=None)
-highlight_differences(file_path, sheet_name, 'NLZk', 'NLZ', header_row=2, valid_combinations=None)
-
-print("Datei wurde erfolgreich gespeichert!")
+print('Datei wurde erfolgreich gespeichert!')
 
