@@ -13,7 +13,8 @@ from utils import highlight_differences, de_sort_key, create_district_sheets
 # Hausanschlüsse Analyse
 
 # !!! Überpüfen: !!!
-run_in_vs_code = True
+run_in_vs_code = False
+print('Lädt...')
 path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Hausanschlüsse')    #Dateipfad überprüfen
 file_1_name = 'Alle Anschlüsse'
 file_1_sheet_name = 'Hausanschluss'
@@ -21,18 +22,21 @@ file_1_merging_column = 'Absicherung'
 file_1_header = 4   # Spaltenname in Zeile 5
 file_1_needed_columns = ['Absicherung', 'Teilnetz', 'Ortsteil']
 
-file_2_sheet_name = 'Zuordnungstabelle'
+file_2_name = 'Zuordnungstabelle'
+file_2_sheet_name = 'List1'
 file_2_merging_column = 'Sicherungseinsätze'
 file_2_header = 0
 file_2_needed_columns = ['Sicherungseinsätze', 'Leistung']
 
 # Excel einlesen
 if run_in_vs_code:
-    file_path = path_folder / (file_1_name + '.xlsx')
+    file_1_path = path_folder / (file_1_name + '.xlsx')
+    file_2_path = path_folder / (file_2_name + '.xlsx')
 else:
-    file_path = file_1_name + '.xlsx' 
-df_Hausanschluss = pd.read_excel(file_path, sheet_name=file_1_sheet_name, header=file_1_header)
-df_Zuordnungstabelle = pd.read_excel(file_path, sheet_name=file_2_sheet_name, header=file_2_header)
+    file_1_path = file_1_name + '.xlsx'
+    file_2_path = file_2_name + '.xlsx' 
+df_Hausanschluss = pd.read_excel(file_1_path, sheet_name=file_1_sheet_name, header=file_1_header)
+df_Zuordnungstabelle = pd.read_excel(file_2_path, sheet_name=file_2_sheet_name, header=file_2_header)
 
 # Daten individuel bearbeiten
 df_Hausanschluss = df_Hausanschluss[file_1_needed_columns]
@@ -53,20 +57,25 @@ df_only = df_missing_values.drop_duplicates(subset=['Absicherung'])
 list_districts = df_merged_files.loc[df_merged_files['Ortsteil'] != '-', 'Ortsteil'].dropna().unique().tolist() # Liste aller Ortsteile
 
 # Excel-Datei kreiren
+list_values_all_districts =  []
 date_today = datetime.now().strftime('%Y%m%d') + '_'
 file_name = 'Hausanschluss_Auswertung'
 if run_in_vs_code:
-    file_path = path_folder / (date_today + file_name + '.xlsx')
+    file_1_path = path_folder / (date_today + file_name + '.xlsx')
 else:
-    file_path = date_today + file_name + '.xlsx'
+    file_1_path = date_today + file_name + '.xlsx'
 sheet_name = 'Gesamt'
-with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+with pd.ExcelWriter(file_1_path, engine='openpyxl') as writer:
     #df_merged_files.to_excel(writer, sheet_name=sheet_name, index=False, startrow=0)
-    create_district_sheets(writer, df_merged_files, district_name=sheet_name)
-    #df_missing_values.to_excel(writer, sheet_name='Fehlender Sicherungswert', index=False, startrow=0)
-    #df_only.to_excel(writer, sheet_name='Doppelte entfernt', index=False, startrow=0)
+    list_values_district = create_district_sheets(writer, df_merged_files, district_name=sheet_name)
+    list_values_all_districts.append(list_values_district)
+    df_missing_values.to_excel(writer, sheet_name='Fehlender Sicherungswert', index=False, startrow=0)
+    df_only.to_excel(writer, sheet_name='Doppelte entfernt', index=False, startrow=0)
     for district in list_districts:
-        create_district_sheets(writer, df_merged_files, district_name=district)
+        list_values_district = create_district_sheets(writer, df_merged_files, district_name=district)
+        list_values_all_districts.append(list_values_district)
+    df_values_all_districts = pd.DataFrame(list_values_all_districts, columns=['Ortsteil', 'Anzahl kein Sicherungswert', 'Prozent kein Sicherungswert'])
+    df_values_all_districts.to_excel(writer, sheet_name='Vergleich Ortsteile', index=False, startrow=0)
 
 print('Datei wurde erfolgreich gespeichert!')
 

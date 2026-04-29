@@ -55,6 +55,9 @@ def create_district_sheets(writer, df_merged_files, district_name):
     ws.cell(row=6, column=9, value='Summe Leistung')
     ws.cell(row=6, column=10, value=sum_power)
     ws.column_dimensions['I'].width = 28
+
+    list = [district_name, nb_district_nothing, percent_district_nothing]
+    return list
        
 # Hilfsfunktion zum Sortieren von Strings mit deutschen Umlauten
 def de_sort_key(s):
