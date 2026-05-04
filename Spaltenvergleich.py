@@ -13,7 +13,7 @@ from utils import highlight_differences, de_sort_key, create_district_sheets
 # Hausanschlüsse Analyse
 
 # !!! Überpüfen: !!!
-run_in_vs_code = False
+run_in_vs_code = True
 print('Lädt...')
 path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Hausanschlüsse')    #Dateipfad überprüfen
 file_1_name = 'Alle Anschlüsse'
@@ -74,7 +74,7 @@ with pd.ExcelWriter(file_1_path, engine='openpyxl') as writer:
     for district in list_districts:
         list_values_district = create_district_sheets(writer, df_merged_files, district_name=district)
         list_values_all_districts.append(list_values_district)
-    df_values_all_districts = pd.DataFrame(list_values_all_districts, columns=['Ortsteil', 'Anzahl kein Sicherungswert', 'Prozent kein Sicherungswert'])
+    df_values_all_districts = pd.DataFrame(list_values_all_districts, columns=['Ortsteil', 'Anzahl kein Sicherungswert', 'Prozent kein Sicherungswert', 'Anzahl Gesamt'])
     df_values_all_districts.to_excel(writer, sheet_name='Vergleich Ortsteile', index=False, startrow=0)
 
 print('Datei wurde erfolgreich gespeichert!')
