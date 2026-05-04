@@ -68,3 +68,8 @@ def automatic_column_width(file_name, sheet_name):
         ws.column_dimensions[column_letter].width = adjusted_width
 
     wb.save(file_name)
+
+def power_per_year(df_all_pv):
+    df_all_pv_power_per_year = (df_all_pv.groupby('Inbetriebnahmedatum der Einheit')['Bruttoleistung der Einheit'].sum().reset_index())
+    df_all_pv_power_per_year = df_all_pv_power_per_year.rename(columns={'Bruttoleistung der Einheit': 'Zuwachs pro Jahr', 'Inbetriebnahmedatum der Einheit': 'Jahr'})
+    df_all_pv_power_per_year['Summe'] = (df_all_pv_power_per_year['Zuwachs pro Jahr'].cumsum())
