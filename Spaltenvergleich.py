@@ -48,7 +48,7 @@ df_all_pv = excel_file_1[excel_file_1['Energieträger'] == 'Solare Strahlungsene
 df_all_pv_west = df_all_pv[df_all_pv['Postleitzahl'] == 91056]
 
 merged_df: pd.DataFrame = pd.merge(df_all_pv_west, excel_file_2, on='Straße', how='left')
-#merged_df.to_excel('Gesamte PVs.xlsx', index=False)
+
 # 
 list_districts = merged_df.loc[merged_df['Ortsteil'] != '-', 'Ortsteil'].dropna().unique().tolist() # Liste aller Ortsteile
 
@@ -57,9 +57,11 @@ file_name = 'Auswertung_MaStR_Westnetz'
 date_today = datetime.now().strftime('%Y%m%d') + '_'
 if run_in_vs_code:
     file_path = path_folder / (date_today + file_name + '.xlsx')
+    file_path_2 = path_folder / (date_today + 'alOrTe.xlsx')
 else:
     file_path = date_today + file_name + '.xlsx'
 
+merged_df.to_excel(file_path_2, index=False)
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
     #df_all_pv.to_excel(writer, sheet_name='Gesamte PVs', index=False)
     for district in list_districts:
