@@ -9,26 +9,26 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from utils import highlight_differences, de_sort_key
 
-# Mergen von Zeilen zweier beliebiger Excel-Dateien
+# Adressen zu Tennet Steuerbarkeitscheck MaStR Dokument hinzufügen
 
 # !!! Überpüfen: !!!
-path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\k")    #Dateipfad überprüfen
-file_1_name = 'Werte'
-file_1_sheet_name = 'List1'
-file_1_merging_column = 'NKZk'
+path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Steuerbarkeitscheck')    #Dateipfad überprüfen
+file_1_name = 'Tennet_Jahresmeldung_Kopie'
+file_1_sheet_name = 'Tabelle1'
+file_1_merging_column = 'MaStR-Nr. der SEE'
 file_1_header = 0
-file_1_needed_columns = ['NLZk', 'NKZk']
+file_1_needed_columns = ['MaStR-Nr. der SEE', 'Anlagenname', 'Anschrift / Flurstück']
 
-file_2_name = 'Netzleitzahlen_Makro'
-file_2_sheet_name = 'Stationsliste'
-file_2_merging_column = 'NKZ'
+file_2_name = 'MaStR'
+file_2_sheet_name = 'Stromerzeuger'
+file_2_merging_column = 'MaStR-Nr. der Einheit'
 file_2_header = 0
-file_2_needed_columns = ['NKZ', 'NLZ']
+file_2_needed_columns = ['MaStR-Nr. der Einheit', 'Anzeige-Name der Einheit', 'Straße']
 
 # Excel einlesen
 excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
 
-excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsm'), sheet_name=file_2_sheet_name, header=file_2_header)
+excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
 
 
 # Daten individuel bearbeiten
@@ -46,6 +46,8 @@ excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsm'), sheet_name=fi
 # excel_file_2 = excel_file_2[excel_file_2['Energieträger'] == 'Solare Strahlungsenergie']
 # excel_file_2 = excel_file_2[excel_file_2['Betriebsstatus'] == 'In Betrieb']
 # excel_file_2 = excel_file_2[excel_file_2['Systemstatus'] == 'Aktiviert']
+excel_file_2['Hausnummer'] = (excel_file_2['Hausnummer'].astype(str).str.replace(r':.*', '', regex=True).fillna(''))
+excel_file_2['Straße'] = excel_file_2['Straße'] + ' ' + excel_file_2['Hausnummer'].fillna('').astype(str)
 
 excel_file_1 = excel_file_1[file_1_needed_columns]
 excel_file_2 = excel_file_2[file_2_needed_columns]
@@ -56,7 +58,7 @@ nb_columns_excel_file_2 = excel_file_2.shape[1]
 nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 
 # Datensätze zusammenführen
-merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_merging_column, right_on= file_2_merging_column, how='outer', indicator=False)
+merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_merging_column, right_on= file_2_merging_column, how='left', indicator=False)
 #merged_files.to_excel('Gesamt.xlsx', index=False)
 
 # Excel-Datei kreiren
@@ -77,19 +79,19 @@ with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
     cell_right = worksheet.cell(row=1, column=nb_columns_excel_file_1+1)
     cell_left.value = file_1_name.split('.')[0]
     cell_right.value = file_2_name.split('.')[0]
-    center_align = Alignment(horizontal="center", vertical="center")
+    center_align = Alignment(horizontal='center', vertical='center')
 
-    cell_left.fill = PatternFill(start_color="C6EFCE", fill_type="solid")   # grüne Formatierung
+    cell_left.fill = PatternFill(start_color='C6EFCE', fill_type='solid')   # grüne Formatierung
     cell_left.font = Font(bold=True, size=16)
     cell_left.alignment = center_align
 
-    cell_right.fill = PatternFill(start_color="BDD7EE", fill_type="solid") # blaue Foramtierung
+    cell_right.fill = PatternFill(start_color='BDD7EE', fill_type='solid') # blaue Foramtierung
     cell_right.font = Font(bold=True, size=16)
     cell_right.alignment = center_align
 
     for col in range(1, nb_columns + 1):
         cell = worksheet.cell(row=2, column=col)
-        cell.fill = PatternFill(start_color="E7E6E6", fill_type="solid")    # graue Formatierung
+        cell.fill = PatternFill(start_color='E7E6E6', fill_type='solid')    # graue Formatierung
         cell.font = Font(bold=True)
 
     # Trennungslinie erzeugen
@@ -115,8 +117,8 @@ with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
             adjusted_width = 30
         worksheet.column_dimensions[column_letter].width = adjusted_width
 
-highlight_differences(file_path, sheet_name, 'NKZk', 'NKZ', header_row=2, valid_combinations=None)
-highlight_differences(file_path, sheet_name, 'NLZk', 'NLZ', header_row=2, valid_combinations=None)
+#highlight_differences(file_path, sheet_name, 'NKZk', 'NKZ', header_row=2, valid_combinations=None)
+#highlight_differences(file_path, sheet_name, 'NLZk', 'NLZ', header_row=2, valid_combinations=None)
 
-print("Datei wurde erfolgreich gespeichert!")
+print('Datei wurde erfolgreich gespeichert!')
 
