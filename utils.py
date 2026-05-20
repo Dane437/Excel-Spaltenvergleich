@@ -2,6 +2,8 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import FormulaRule
 import unicodedata
+import re
+from rapidfuzz import process, fuzz
 
 # Vergleicht die Werte in den angegebenen Spalten und hebt die Unterschiede hervor
 def highlight_differences(file_name, sheet_name, col_left, col_right, header_row, valid_combinations):
