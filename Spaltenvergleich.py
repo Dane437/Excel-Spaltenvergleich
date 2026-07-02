@@ -34,7 +34,6 @@ compare_columns = [('Bruttoleistung der Einheit', 'LeistungErzeugung'), ('Straß
 excel_file_1 = pd.read_excel(path_folder / (file_1_name +'.xlsx'), sheet_name=file_1_sheet_name, header=file_1_header)
 excel_file_1 = excel_file_1[file_1_needed_columns]
 excel_file_2 = pd.read_excel(path_folder / (file_2_name +'.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
-excel_file_2 = excel_file_2[excel_file_2['Art der Erzeugung'].isin(['PV', 'PV-Balkonanlage', 'PV-Freiflächeanlage'])]
 excel_file_2 = excel_file_2[file_2_needed_columns]
 
 # Daten individuel bearbeiten
@@ -50,6 +49,8 @@ excel_file_1 = excel_file_1[~excel_file_1['Inbetriebnahmedatum der Einheit'].dt.
 excel_file_2['IBS am'] = pd.to_datetime(excel_file_2['IBS am'], format='%d.%m.%Y', errors='coerce')
 excel_file_2 = excel_file_2[~excel_file_2['IBS am'].dt.year.isin([2025, 2026])]
 excel_file_1 = excel_file_1[excel_file_1['Energieträger'].isin(['Solare Strahlungsenergie', 'Biomasse', 'Speicher', 'Wasser', 'Wind'])]
+
+excel_file_2.to_excel(path_folder / 'test.xlsx', index=False)
 excel_file_2 = excel_file_2[excel_file_2['Art der Erzeugung'].isin(['PV', 'PV-Balkonanlage', 'PV-Freiflächeanlage', 'Wasserkraft', 'Windkraft', 'Bio-Gas', 'Energie-Speicher'])]
 
 # Anzahl Spalten bestimmen
