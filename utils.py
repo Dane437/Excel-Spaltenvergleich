@@ -3,6 +3,28 @@ from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 import unicodedata
+import pandas as pd
+import re
+from datetime import datetime, time
+
+def bereinige_hausnummer(x):
+    if pd.isna(x):
+        return x
+
+    s = str(x).strip()
+
+    # Fall 1: Uhrzeitformat (01:00:00 -> 1a)
+    m = re.fullmatch(r'(\d{1,2}):00:00', s)
+    if m:
+        return f"{int(m.group(1))}a"
+
+    # Fall 2: Datumsformat (05.09.2026 -> 5-9)
+    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\.\d{4}', s)
+    if m:
+        return f"{int(m.group(1))}-{int(m.group(2))}"
+
+    return s
+
 
 # Vergleicht die Werte in den angegebenen Spalten und hebt die Unterschiede hervor
 def highlight_differences(file_name, sheet_name, col_left, col_right, header_row, valid_combinations, empty_is_difference):
@@ -73,3 +95,46 @@ def power_per_year(df_all_pv):
     df_all_pv_power_per_year = (df_all_pv.groupby('Inbetriebnahmedatum der Einheit')['Bruttoleistung der Einheit'].sum().reset_index())
     df_all_pv_power_per_year = df_all_pv_power_per_year.rename(columns={'Bruttoleistung der Einheit': 'Zuwachs pro Jahr', 'Inbetriebnahmedatum der Einheit': 'Jahr'})
     df_all_pv_power_per_year['Summe'] = (df_all_pv_power_per_year['Zuwachs pro Jahr'].cumsum())
+
+
+def bereinige_hausnummer(x):
+    if pd.isna(x):
+        return x
+
+    # Falls Excel als Uhrzeit erkannt hat
+    if isinstance(x, time):
+        return f"{x.hour}a"
+
+    # Falls Excel als Datum erkannt hat
+    if isinstance(x, datetime):
+        return f"{x.day}-{x.month}"
+
+    s = str(x).strip()
+
+   # Alle Leerzeichen entfernen
+    s = re.sub(r"\s+", "", s)
+
+    # Alles in Kleinbuchstaben umwandeln
+    s = s.lower()
+
+    # Uhrzeit als Text: 01:00:00 bis 23:00:00 -> 1a bis 23a
+    m = re.fullmatch(r'(\d{1,2}):00:00', s)
+    if m:
+        stunde = int(m.group(1))
+        return f"{stunde}a"
+
+    # Datum als Text: 01.01.2026, 31.12.2026 usw.
+    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\.\d{4}', s)
+    if m:
+        tag = int(m.group(1))
+        monat = int(m.group(2))
+        return f"{tag}-{monat}"
+
+    # Falls das Jahr fehlt: 01.01.
+    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\.?', s)
+    if m:
+        tag = int(m.group(1))
+        monat = int(m.group(2))
+        return f"{tag}-{monat}"
+
+    return s
