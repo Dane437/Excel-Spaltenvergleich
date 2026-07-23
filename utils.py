@@ -1,7 +1,11 @@
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
+from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import FormulaRule
 import unicodedata
+import pandas as pd
+import re
+from datetime import datetime, time
 
 # Vergleicht die Werte in den angegebenen Spalten und hebt die Unterschiede hervor
 def highlight_differences(file_name, sheet_name, col_left, col_right, header_row, valid_combinations, empty_is_difference):
@@ -62,3 +66,45 @@ def create_differences_sheet(file_name, rows_different, header_row):
              worksheet_copy.delete_rows(row)
 
     wb.save(file_name)
+
+def bereinige_hausnummer(x):
+    if pd.isna(x):
+        return x
+
+    # Falls Excel als Uhrzeit erkannt hat
+    if isinstance(x, time):
+        return f"{x.hour}a"
+
+    # Falls Excel als Datum erkannt hat
+    if isinstance(x, datetime):
+        return f"{x.day}-{x.month}"
+
+    s = str(x).strip()
+
+   # Alle Leerzeichen entfernen
+    s = re.sub(r"\s+", "", s)
+
+    # Alles in Kleinbuchstaben umwandeln
+    s = s.lower()
+
+    # Uhrzeit als Text: 01:00:00 bis 23:00:00 -> 1a bis 23a
+    m = re.fullmatch(r'(\d{1,2}):00:00', s)
+    if m:
+        stunde = int(m.group(1))
+        return f"{stunde}a"
+
+    # Datum als Text: 01.01.2026, 31.12.2026 usw.
+    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\.\d{4}', s)
+    if m:
+        tag = int(m.group(1))
+        monat = int(m.group(2))
+        return f"{tag}-{monat}"
+
+    # Falls das Jahr fehlt: 01.01.
+    m = re.fullmatch(r'(\d{1,2})\.(\d{1,2})\.?', s)
+    if m:
+        tag = int(m.group(1))
+        monat = int(m.group(2))
+        return f"{tag}-{monat}"
+
+    return s
