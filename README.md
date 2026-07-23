@@ -1,7 +1,6 @@
 **Kurzzusammenfassung**
 
-Dieses Script führt ein Datenvergleich zwischen der Excel Datei Netzleitzahlen_Makro und der Excel Datei K3v-Export durch.
-Das Script generiert eine neue Excel Datei in der die Daten schön übersichtlich angezeigt werden. Dabei werden die Daten intelligent geordent, Unterschiede frablich hervorgehoben, sowie Statistiken erstellt.
+Datenvergleich zwischen zwei Excel-Dateien, hier Ladesaeulen_SharePoint und Ladesaeulenregister_BNetzA. Haunummern werden bereinigt z.B. 3.Mai zu 3-5.
 
 **Script starten**
 
@@ -41,4 +40,4 @@ oder alternativ über den folgenden Button:
 
 <img width="380" height="287" alt="image" src="https://github.com/user-attachments/assets/7aa26e5d-a9a1-4942-8079-c92491364a5d" />
 
-Wenn im Terminal steht: "Datei wurde erfolgreich gespeichert!" hat alles funktioniert und die Datei "Unterschiede_K3V_Netzleitzahlen.xlsx" wurde erstellt.
+Wenn im Terminal steht: "Datei wurde erfolgreich gespeichert!" hat alles funktioniert und die Datei wurde erstellt.
