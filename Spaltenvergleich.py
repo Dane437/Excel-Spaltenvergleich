@@ -9,7 +9,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from utils import highlight_differences, de_sort_key, create_differences_sheet, bereinige_hausnummer
 
-# Datenvergleich zwischen zwei Excel-Dateien, hier Trafoliste K3V und Trafoliste aus dem GIS
+# Datenvergleich zwischen zwei Excel-Dateien, hier Ladesaeulen_SharePoint und Ladesaeulenregister_BNetzA
 
 # !!! Überpüfen: !!!
 path_folder = Path(r"C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp\Ladesäulen_Vergleich")    #Dateipfad überprüfen
