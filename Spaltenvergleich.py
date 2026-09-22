@@ -22,7 +22,7 @@ file_1_needed_columns = [file_1_sorting_column, 'Zugang zur Ladeeinrichtung', 'G
 file_2_name = "Ladesaeulenregister_BNetzA"
 file_2_header = 0 # Spaltenname in Zeile 1
 file_2_sheet_name = 'Tabelle1'
-file_2_sorting_column = 'Straße'
+file_2_sorting_column = 'Straße2'
 file_2_needed_columns = [file_2_sorting_column, 'Nennleistung Ladeeinrichtung [kW]', 'Inbetriebnahmedatum', 'Status']
 
 compare_columns = [('Inbetriebssetzungs-datum', 'Inbetriebnahmedatum'),
@@ -40,9 +40,9 @@ excel_file_1 = excel_file_1[~excel_file_1['Bearbeitungsstatus'].isin(['außer Be
 
 excel_file_2 = pd.read_excel(path_folder / (file_2_name + '.xlsx'), sheet_name=file_2_sheet_name, header=file_2_header)
 excel_file_2["Straße"] = excel_file_2["Straße"].str.replace(r"str\.(?=\s|$)", "straße", regex=True, case=False)
-excel_file_2["Straße"] = excel_file_2["Straße"].str.lower()
-excel_file_2['Straße'] = excel_file_2['Straße'] + ' ' + excel_file_2['Hausnummer'].fillna('').astype(str)
-excel_file_2 = excel_file_2[file_2_needed_columns] # auskommentieren, wenn alle Spalten angezeigt werden sollen
+excel_file_2['Straße2'] = excel_file_2['Straße'] + ' ' + excel_file_2['Hausnummer'].fillna('').astype(str)
+excel_file_2["Straße2"] = excel_file_2["Straße2"].str.lower()
+#excel_file_2 = excel_file_2[file_2_needed_columns] # auskommentieren, wenn alle Spalten angezeigt werden sollen
 
 # Anzahl Spalten bestimmen
 nb_columns_excel_file_1 = excel_file_1.shape[1]
@@ -65,7 +65,7 @@ nb_columns = nb_columns_excel_file_1 + nb_columns_excel_file_2
 merged_files: pd.DataFrame = pd.merge(excel_file_1, excel_file_2, left_on= file_1_sorting_column, right_on= file_2_sorting_column, how='outer', indicator=False)
 
 # Excel-Datei kreiren
-file_name = 'Auswertung_Ladesäulen.xlsx'
+file_name = 'Auswertung_Ladesäulen_outer.xlsx'
 file_path = path_folder / file_name
 sheet_name = 'Vergleich'
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
