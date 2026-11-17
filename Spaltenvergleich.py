@@ -9,23 +9,29 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from datetime import datetime
 from utils import highlight_differences, de_sort_key, create_differences_sheet
+import warnings
+warnings.filterwarnings("ignore", message="Print area cannot be set to Defined name", category=UserWarning, module="openpyxl",) #Warnung ist nicht wichtig und wird unterdrückt
 
 # Datenvergleich zwischen Netzleitzahlen.xlsm und K3V-Export.xlsx
 
 # !!! Überpüfen: !!!
 path_folder = Path(r'C:\Users\immler.daniel\OneDrive - Erlanger Stadtwerke AG\Dokumente\j-PythonTemp')    #Dateipfad eingeben
-file_K3V_name = 'Netzstationen_K3V' # Dateiname eingeben
+#path_folder = Path(r'B:\NG\NGE\_Immler\d-Scripte\d-K3V-Netzleitzahlenliste')    #Dateipfad eingeben
+file_K3V_name = 'Netzstationen_K3V' # Dateiname eingeben -> Datei aus K3V, Strukturen, Favorieten Netzstationen
 file_K3V_header = 2 # Headergröße überprüfen (2 = Spaltenüberschriften sind in Zeile 3)
 column_name_K3V = ['Name', 'Nummer', 'Betriebsstatus', 'Inbetriebnahme', 'Teilnetz'] # Spaltennamen eingeben (Spalten nach dem letzen gebrauchten Element können weggelassen werden)
 compare_columns = [('Stationsname', column_name_K3V[0]),    # zu vergleichende Spalten eingeben
                     ('NKZ', 'Nummer NKZ'),
                     ('NLZ', 'Nummer NLZ'),
-                    ('Netz', 'Teilnetz')]
+                    ('Netz', 'Teilnetz'),
+                    ('Status', 'Betriebsstatus')]
 valid_combinations = [('Nord', 'Nordnetz'), # gültige Kombinationen eingeben 
                       ('Ost', 'Ostnetz'),
                       ('Süd', 'Südnetz'),
                       ('West', 'Westnetz'),
                       ('Südost', 'Südostnetz')]
+
+print('Datei wird erstellt, bitte warten...')
 
 # Pfad zu der Netzleitzahlendatei
 file_Netzleitzahlen = Path(r'B:\# N-Gemeinsam\Trafostationsliste\Netzleitzahlen_Makro.xlsm')
@@ -39,6 +45,7 @@ excel_K3_Export = pd.read_excel(path_folder/(file_K3V_name +'.xlsx'), sheet_name
 excel_K3_Export = excel_K3_Export[~excel_K3_Export[column_name_K3V[0]].astype(str).str.contains(r'\(Liegenschaft\)', na=False)] # Zeilen löschen in denen 'Liegenschaft' vorkommt
 excel_K3_Export[['Nummer NLZ', 'Nummer NKZ']] = (excel_K3_Export[column_name_K3V[1]].str.extract(r'.*?(\d{3})\s*/\s*(.+)')) # NLZ und NKZ in eigenen Spalten
 excel_K3_Export['Nummer NLZ'] = pd.to_numeric(excel_K3_Export['Nummer NLZ'], errors='coerce') # NLZ zu Zahl konvertieren
+excel_Netzleitzahlen['Status'] = excel_Netzleitzahlen['Status'].fillna('in Betrieb') # in Betrieb hereinschreiben wo leer ist
 
 # Spalten löschen die nicht angezeigt werden sollen
 excel_K3_Export = excel_K3_Export.drop(columns=[column_name_K3V[1], 'Strukturelement']) # Überprüfen ob das passt
@@ -85,7 +92,7 @@ plt.close() # schließt die figure, um Speicher zu sparen
 # Excel-Datei kreiren
 date_today = datetime.now().strftime('%Y%m%d')
 file_name = date_today + '_Unterschiede_K3V_Netzleitzahlen.xlsx'
-file_path = path_folder / 'Ergebnisse' / file_name
+file_path = path_folder / file_name
 sheet_name = 'Vergleich'
 with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
     final_data.to_excel(writer, sheet_name=sheet_name, index=False, startrow=1)
